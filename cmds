@@ -1,0 +1,27 @@
+#alias k=kubectl
+k() { kubectl $@; }
+source <(kubectl completion bash)
+
+# pods
+
+# replicasets (rs)
+kubectl scale replicaset new-replica-set --replicas=5
+kubectl edit replicaset new-replica-set
+
+# delete
+k delete $(k get po -o name)
+
+
+
+
+
+===
+
+root@controlplane:~# time kubectl delete po new-replica-set-hwbf8
+pod "new-replica-set-hwbf8" deleted
+
+real    1m23.866s
+user    0m0.181s
+sys     0m0.042s
+root@controlplane:~#  uptime
+ 07:30:59 up 32 min,  0 users,  load average: 18.29, 19.75, 19.02
