@@ -1,27 +1,28 @@
 #alias k=kubectl
 k() { kubectl $@; }
 source <(kubectl completion bash)
+source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;g;}')
+# shiftwidth=sw=2
+# tabstop=ts=2
+# softtabstop=sts=-1
+# vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab:
+v() { vim -c ":set sw=2" ${1?} && kubectl create -f $1; }
+v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl create -f $1; }
 
 # pods
+k run redis -n finance --image=redis
 
 # replicasets (rs)
+kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
 kubectl scale replicaset new-replica-set --replicas=5
 kubectl edit replicaset new-replica-set
 
+# deployments
+kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
+kubectl get all
+
+# describe
+k describe $(k get po -o name|head -1)
+
 # delete
 k delete $(k get po -o name)
-
-
-
-
-
-===
-
-root@controlplane:~# time kubectl delete po new-replica-set-hwbf8
-pod "new-replica-set-hwbf8" deleted
-
-real    1m23.866s
-user    0m0.181s
-sys     0m0.042s
-root@controlplane:~#  uptime
- 07:30:59 up 32 min,  0 users,  load average: 18.29, 19.75, 19.02
