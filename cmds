@@ -1,16 +1,21 @@
 #alias k=kubectl
 k() { kubectl $@; }
-source <(kubectl completion bash)
 source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;g;}')
 # shiftwidth=sw=2
 # tabstop=ts=2
 # softtabstop=sts=-1
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab:
-v() { vim -c ":set sw=2" ${1?} && kubectl create -f $1; }
 v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl create -f $1; }
 
 # pods
 k run redis -n finance --image=redis
+k run nginx-pod --image=nginx:alpine
+k run redis --image=redis:alpine --labels='tier=db,foo=bar'
+
+#k run custom-nginx --image=nginx
+#k expose pod custom-nginx --port=8080
+kubectl run custom-nginx --image=nginx --port=8080
+kubectl run httpd --image=httpd:alpine --port=80 --expose
 
 # replicasets (rs)
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
@@ -19,10 +24,26 @@ kubectl edit replicaset new-replica-set
 
 # deployments
 kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
+k create deployment webapp --image=kodekloud/webapp-color --replicas=3
+k set image deployment nginx nginx=nginx:1.18
 kubectl get all
+
+# services
+k create svc clusterip redis-service --tcp=6379:6379  # worked in practice test but should use expose
+k expose pod redis --name=redis-service --port=6379
+
+# namespaces
+k create ns dev-ns
+k create deployment redis-deploy -n dev-ns --image=redis --replicas=2
 
 # describe
 k describe $(k get po -o name|head -1)
 
+# replace
+k replace -f nginx.yaml
+
 # delete
 k delete $(k get po -o name)
+
+# generate manifest
+kubectl run nginx --image=nginx --dry-run=client -o yaml
