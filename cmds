@@ -1,11 +1,11 @@
 #alias k=kubectl
 k() { kubectl $@; }
 source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;g;}')
+v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl apply -f $1; }
 # shiftwidth=sw=2
 # tabstop=ts=2
 # softtabstop=sts=-1
-# vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab:
-v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl create -f $1; }
+# vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 
 # pods
 k run redis -n finance --image=redis
@@ -47,3 +47,15 @@ k delete $(k get po -o name)
 
 # generate manifest
 kubectl run nginx --image=nginx --dry-run=client -o yaml
+
+# labels and selectors
+## labels in spec>selector and spec>template must match
+k get po --selector app=foo
+k get po --selector env=dev|grep -vc NAME
+k get all --selector env=prod|egrep -vc '^$|NAME'
+k get all --selector env=prod|grep -c ^[a-z]
+k get all --selector env=prod --no-headers|wc -l
+k get all --selector env=prod,bu=finance,tier=frontend --no-headers
+
+# taints and tolerations
+k taint nodes node1 key=value:taint-effect
