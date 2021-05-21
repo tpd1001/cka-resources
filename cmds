@@ -58,4 +58,7 @@ k get all --selector env=prod --no-headers|wc -l
 k get all --selector env=prod,bu=finance,tier=frontend --no-headers
 
 # taints and tolerations
+## taint-effect is what happens to pods that do not tolerate the taint
+### NoSchedule
+### PreferNoSchedule
 k taint nodes node1 key=value:taint-effect
