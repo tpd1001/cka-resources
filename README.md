@@ -29,6 +29,7 @@ kubectl edit replicaset new-replica-set
 # deployments
 kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
 k create deployment webapp --image=kodekloud/webapp-color --replicas=3
+k create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
 k set image deployment nginx nginx=nginx:1.18
 kubectl get all
 
@@ -126,6 +127,7 @@ kubectl create -f ds.yaml
 ## as an option in kublet.service (systemd)
 ## or as a --config switch to a file containing the staticPodPath opt
 sudo grep staticPodPath $(ps -wwwaux|sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p'|awk '/^\//{print $1}')
+ls .*  # dummy command to close italics
 k run static-pod-nginx --image=nginx --dry-run=client -o yaml|egrep -v 'creationTimestamp:|resources:|status:|Policy:'>static-pod-nginx.yaml
 
 # multiple schedulers
@@ -164,3 +166,95 @@ k rollout undo deployment/myapp
 ## ENTRYPOINT ["sleep"]
 ## CMD ["5"]
 ## default command will be "sleep 5"
+
+# environment variables
+docker run --rm -ti -p 8080:8080 -e APP_COLOR=blue kodekloud/webapp-color
+#spec:
+#  containers:
+#  - env:
+#    - name: APP_COLOR
+#      value: green
+
+# configmaps
+k create configmap --from-literal=APP_COLOR=green \
+                   --from-literal=APP_MOD=prod
+k create configmap --from-file=app_config.properties
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: app-config
+#data:
+#  APP_COLOR: green
+#  APP_MOD: prod
+
+#    image: foo
+#    envFrom:
+#      configMapRef:
+#      name: app-config
+
+# secrets
+k create secret generic app-secret --from-literal=DB_PASSWD=green \
+                                   --from-literal=MYSQL_PASSWD=prod
+k create secret generic app-secret --from-file=app_secret.properties
+k describe secret app-secret
+k get secret app-secret -o yaml
+#apiVersion: v
+#kind: Secret
+#metadata:
+#  name: app-secret
+#data:
+#  # encode with: echo -n "password123" | base64
+#  # decode with: echo -n "encodedstring" | base64 --decode
+#  DB_PASSWD: green
+#  MYSQL_PASSWD: prod
+
+#    image: foo
+#    envFrom:
+#      secretRef:
+#      name: app-config
+
+#volumes:
+#  - name: app-secret-volume
+#    secret:
+#      secretName: app-secret
+ls /opt/app-secret-volumes
+cat /opt/app-secret-volumes/DB_PASSWD
+
+# multi-container pods
+
+# init containers
+kubectl describe pod blue  # check the state field of the initContainer and reason: Completed
+
+  initContainers:
+  - command:
+    - sh
+    - -c
+    - sleep 600
+    image: busybox
+    name: red-init
+
+# cluster upgrades
+k drain node01 --ignore-daemonsets
+k cordon node01
+k uncordon node01
+
+## controlplane
+kubeadm version -o short
+kubectl drain controlplane --ignore-daemonsets
+apt update && apt-cache madison kubeadm
+apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
+kubeadm upgrade plan v1.20.0
+kubeadm upgrade -y apply v1.20.0
+apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+kubectl uncordon controlplane
+
+## workers
+kubectl drain node01 --ignore-daemonsets --force
+apt update && apt-cache madison kubeadm
+apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
+kubeadm upgrade node  # this is quick as just a config upgrade
+apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+sudo systemctl daemon-reload && sudo systemctl restart kubelet
+kubectl uncordon node01
