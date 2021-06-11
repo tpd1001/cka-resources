@@ -222,6 +222,19 @@ cat /opt/app-secret-volumes/DB_PASSWD
 
 # multi-container pods
 
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: yellow
+  name: yellow
+spec:
+  containers:
+  - image: busybox
+    name: lemon
+  - image: redis
+    name: gold
+
 # init containers
 kubectl describe pod blue  # check the state field of the initContainer and reason: Completed
 
@@ -243,9 +256,14 @@ kubeadm version -o short
 kubectl drain controlplane --ignore-daemonsets
 apt update && apt-cache madison kubeadm
 apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
+yum list --showduplicates kubeadm --disableexcludes=kubernetes
+yum install -y kubeadm-1.21.x-0 --disableexcludes=kubernetes
 kubeadm upgrade plan v1.20.0
-kubeadm upgrade -y apply v1.20.0
+kubeadm config images pull
+kubeadm upgrade apply -y v1.20.0
 apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+yum install -y kubelet-1.21.x-0 kubectl-1.21.x-0 --disableexcludes=kubernetes
+sudo systemctl daemon-reload && sudo systemctl restart kubelet
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 kubectl uncordon controlplane
@@ -258,3 +276,20 @@ kubeadm upgrade node  # this is quick as just a config upgrade
 apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
 sudo systemctl daemon-reload && sudo systemctl restart kubelet
 kubectl uncordon node01
+
+# backup and restore
+kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+ETCDCTL_API=3 etcdctl snapshot save snapshot.db
+ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+## restore
+service kube-apiserver stop
+ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
+--data-dir /new/data/dir
+
+
+# security
+
+# authentication
+# basic, depracated
+curl -vk https://master_node_ip:6443/api/v1/pods -u "userid:passwd
+curl -vk https://master_node_ip:6443/api/v1/pods --header "Authorization: Bearer ${token?}"
