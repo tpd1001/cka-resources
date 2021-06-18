@@ -247,6 +247,7 @@ kubectl describe pod blue  # check the state field of the initContainer and reas
     name: red-init
 
 # cluster upgrades
+https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
 k drain node01 --ignore-daemonsets
 k cordon node01
 k uncordon node01
@@ -293,3 +294,45 @@ ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
 # basic, depracated
 curl -vk https://master_node_ip:6443/api/v1/pods -u "userid:passwd
 curl -vk https://master_node_ip:6443/api/v1/pods --header "Authorization: Bearer ${token?}"
+
+# view certificates
+k get po kube-apiserver-controlplane -o yaml -n kube-system|grep cert
+k get po etcd-controlplane -o yaml -n kube-system|grep cert
+openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt
+openssl x509 -text -noout -in /etc/kubernetes/pki/etcd/server.crti|grep CN  # etcd
+openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt|grep Not    # validity
+openssl x509 -text -noout -in /etc/kubernetes/pki/ca.crt|grep Not           # CA validity
+for f in $(grep pki /etc/kubernetes/manifests/etcd.yaml|egrep 'key|crt'|awk -F= '{print $2}'); do echo +++ $f;test -f $f && echo y || echo n;done
+vim /etc/kubernetes/manifests/etcd.yaml
+docker logs $(docker ps|grep -v pause:|awk '/etcd/{print $1}')
+grep pki /etc/kubernetes/manifests/kube-apiserver.yaml|grep '\-ca'
+
+# certificates API
+openssl genrsa -out jane.key 2048
+openssl req -new -key jane.key -subj "/CN=jane" -out jane.csr
+cat jane.csr|base64
+
+# v1.19 = v1
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: jane
+spec:
+  groups:
+  - system:authenticated
+  usages:
+  - digital signature
+  - key encipherment
+  - server 
+  signerName: kubernetes.io/kube-apiserver-client
+  # cat jane.csr|base64
+  request:
+      base64text
+
+kubectl get csr
+kubectl certificate approve jane
+kubectl get csr -o yaml
+cat jane.b64|base64 --decode
+
+cat akshay.csr|base64|sed 's/^/      /'>>akshay.yaml
+sed -i "/request:/s/$/ $(echo $csr|sed 's/ //g')/" a
