@@ -10,6 +10,8 @@ spec:
     - "4800"
     securityContext:
       runAsUser: 1010
+      capabilities:
+        add: ["SYS_TIME"]
     image: ubuntu
     imagePullPolicy: Always
     name: ubuntu
