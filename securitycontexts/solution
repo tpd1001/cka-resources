@@ -8,6 +8,8 @@ spec:
   - command:
     - sleep
     - "4800"
+    securityContext:
+      runAsUser: 1010
     image: ubuntu
     imagePullPolicy: Always
     name: ubuntu
