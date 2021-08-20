@@ -24,7 +24,7 @@ spec:
         app: web
     spec:
       containers:
-      - image: nginx:alpine
+      - image: myprivateregistry.com:5000/nginx:alpine
         imagePullPolicy: IfNotPresent
         name: nginx
         resources: {}
