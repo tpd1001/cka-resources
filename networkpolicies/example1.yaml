@@ -13,6 +13,9 @@ spec:
       - podSelector:
           matchLabels:
             name: api-prod
+        namespaceSelector:
+          matchLabels:
+            name: prod
     ports:
       - protocol: TCP
         port: 3306
