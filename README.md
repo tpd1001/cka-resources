@@ -21,6 +21,11 @@ kubectl run httpd --image=httpd:alpine --port=80 --expose
 
 kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml
 
+  905  kubectl get po -o custom-columns-file=PODS.template
+  906  k get po -o jsonpath="{.items[*].spec.containers[*].image}"
+  907  vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
+  908  watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
+
 # replicasets (rs)
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
 kubectl scale replicaset new-replica-set --replicas=5
@@ -67,6 +72,11 @@ k get all --selector env=prod,bu=finance,tier=frontend --no-headers
 ### NoSchedule
 ### PreferNoSchedule
 ### NoExecute
+# permit master to run pods
+k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
+# prevent master from running pods again (defaut)
+k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
+
 k taint nodes node1 key=value:taint-effect
 k taint nodes node1 app=blue:NoSchedule
 k taint nodes node1 app=blue:NoSchedule-  # to remove
@@ -156,8 +166,11 @@ k edit deployment/myapp
 k rollout status deployment/myapp
 k rollout history deployment/myapp
 k rollout undo deployment/myapp
+kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
 
 # Dockerfile commands
+## kube command == docker entrypoint
+## kube args    == docker cmd
 ## with CMD        command line params get replaced entirely
 ## with ENTRYPOINT command line params get appended
 ## ENTRYPOINT => command that runs on startup
@@ -166,6 +179,17 @@ k rollout undo deployment/myapp
 ## ENTRYPOINT ["sleep"]
 ## CMD ["5"]
 ## default command will be "sleep 5"
+
+# command & args in kubernetes
+    command: ["printenv"]
+    args: ["HOSTNAME", "KUBERNETES_PORT"]
+# or
+    command:
+    - printenv
+    args:
+    - HOSTNAME
+    - KUBERNETES_PORT
+
 
 # environment variables
 docker run --rm -ti -p 8080:8080 -e APP_COLOR=blue kodekloud/webapp-color
@@ -275,6 +299,10 @@ apt update && apt-cache madison kubeadm
 apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
 kubeadm upgrade node  # this is quick as just a config upgrade
 apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+# where does this bit get done?
+# ===
+yum list docker-ce --showduplicates
+# ===
 sudo systemctl daemon-reload && sudo systemctl restart kubelet
 kubectl uncordon node01
 
@@ -336,3 +364,203 @@ cat jane.b64|base64 --decode
 
 cat akshay.csr|base64|sed 's/^/      /'>>akshay.yaml
 sed -i "/request:/s/$/ $(echo $csr|sed 's/ //g')/" a
+
+# KubeConfig
+curl https://kubecluster:6443/api/v1/nodes \
+ --key admin.key \
+ --cert admin.crt \
+ --cacert ca.crt \
+curl https://controlplane:6443/api/v1/nodes --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
+
+kubectl get nodes \
+ --server controlplane:6443 \
+ --client-key admin.key \
+ --client-certificate admin.crt \
+ --certificate-authority ca.crt
+
+kubectl get nodes \
+ --kubeconfig config
+
+kubectl config view
+kubectl config view --kubeconfig=my-custom-config
+kubectl config use-context prod-user@production
+kubectl config -h
+
+k config --kubeconfig=my-kube-config current-context
+k config --kubeconfig=my-kube-config use-context research
+
+contexts:
+- name: kubernetes-admin@kubernetes
+  context:
+    cluster: kubernetes
+    namespace: default
+    user: kubernetes-admin
+
+# better to use full path to crt etc. or base64 encode it
+
+# API Groups
+curl -k https://controlplane:6443/ --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
+curl -k https://controlplane:6443/apis --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
+# =OR=
+kubectl proxy  # starts on localhost:8001 and proxy uses creds from kubeconfig file
+curl -k https://localhost:6443
+
+# Authorisation
+k describe -n kube-system po kube-apiserver-controlplane
+## Node
+## ?BAC
+## Webhook
+## AlwaysAllow?
+## AlwaysDeny?
+## RBAC
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+  # namespace: tbc
+rules:
+  # blank for core groups, names for anything else
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list,"get","create","update","delete"]
+  #resourceNames: ["red","blue"]  # optional, specific resources e.g. only certain pods
+
+kubectl create -f developer-role.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devuser-developer-binding
+  # namespace: tbc
+subjects:
+- kind: User
+  name: dev-user
+  verbs: rbac.authorization.k8s.io
+roleRef:
+  # blank for core groups, names for anything else
+- kind: Role
+  name: developer
+  verbs: rbac.authorization.k8s.io
+
+kubectl create -f devuser-developer-binding.yaml
+
+k get roles
+k get rolebindings
+k describe role developer
+k describe rolebinding devuser-developer-rolebinding
+
+k auth can-i create deployments
+k auth can-i delete nodes
+k auth can-i create deployments --as dev-user
+k auth can-i create pods        --as dev-user
+k auth can-i create pods        --as dev-user --namespace test
+# can edit in-place
+k edit role developer -n blue
+
+# Cluster Roles and Role Bindings
+k get roles
+k get roles -n kube-system -o yaml
+k get role -n blue developer -o yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+  namespace: blue
+rules:
+- apiGroups:  # [""] or ["apps","extensions"] for example
+  - ""
+  resourceNames:
+  - blue-app
+  resources:  # ["pods"] or
+  # optional
+  - pods
+  verbs:  # ["get","list"] or
+  - get
+  - watch
+  - create
+  - delete
+
+k get rolebinding -n blue dev-user-binding -o yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dev-user-binding
+  namespace: blue
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: developer
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: dev-user
+
+k create -f rb.yaml
+
+k auth can-i create pods
+k auth can-i create pods --as dev-user
+# don't need to delete & recreate - can edit in-place
+kubectl edit role developer -n blue
+
+# t
+
+# Cluster Roles and Role Bindings
+kubectl api-resources --namespaced=true
+kubectl api-resources --namespaced=false
+
+# Image Security
+image: docker.io/nginx/nginx
+#                      ^^^^^-- image/repository
+#                ^^^^^-------- user/account
+#      ^^^^^^^^^-------------- registry
+image: gcr.io/kubernetes-e2e-test-images/dnsutils
+#
+docker login private-registry.io
+docker run   private-registry.io/apps/internal-app
+#
+kubectl create secret docker-registry regcred \
+ --docker-server=private-registry.io \
+ --docker-username=registry-user \
+ --docker-password=password123 \
+ --docker-email=registry-user@org.com
+
+spec:
+  containers:
+  - image: nginx:latest
+    name: ignition-nginx
+  imagePullSecrets:
+  - name: regcred
+
+# Security Contexts
+## security settings & capabilities
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+  securityContext:
+    runAsUser: 1000
+  containers:
+  - name: nginx
+    image: nginx:1.20
+    command: ["sleep", "3600"]
+    # container settings override pod settings
+    securityContext:
+      # i.e. docker run --user=999 ubuntu sleep 3600
+      runAsUser: 999
+      # capabilities are only supported at the container level, not the pod level
+      # i.e. docker run --cap-add MAC_ADMIN ubuntu
+      capabilities:
+        add: ["MAC_ADMIN"]
+
+# Network Policies
+## Ingress is to the pod
+## Egress  is from the pod
+## only looking at direction in which the traffic originated
+## the response is not in scope
+
+in the from: or to: sections,
+ each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
+ without a hyphen prefix it is a criteria for a rule and they are all AND'd together. ie. must match ALL criteria
