@@ -7,7 +7,10 @@ spec:
     matchLabels:
       name: payroll
   policyTypes:
-  -  Egress
+  - Egress
+  - Ingress
+  ingress:
+  - {}
   egress:
   - to:
     - podSelector:
@@ -23,3 +26,8 @@ spec:
     ports:
     - protocol: TCP
       port: 3306
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
