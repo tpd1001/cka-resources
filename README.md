@@ -141,6 +141,9 @@ ls .*  # dummy command to close italics
 k run static-pod-nginx --image=nginx --dry-run=client -o yaml|egrep -v 'creationTimestamp:|resources:|status:|Policy:'>static-pod-nginx.yaml
 
 # multiple schedulers
+# https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/
+# https://jvns.ca/blog/2017/07/27/how-does-the-kubernetes-scheduler-work/
+# https://stackoverflow.com/questions/28857993/how-does-kubernetes-scheduler-work/28874577#28874577
 ## use /etc/kubernetes/manifests/kube-scheduler.yaml as a source
 ## add --scheduler-name= option
 ## change --leader-elect to false
@@ -564,3 +567,21 @@ spec:
 in the from: or to: sections,
  each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
  without a hyphen prefix it is a criteria for a rule and they are all AND'd together. ie. must match ALL criteria
+
+# Docker Storage
+/var/lib/docker
++aufs
++containers
++image
++volumes
+ +data_volume   created here by `docker volume create data_volume`
+ +datavolume2   auto-created on the flt is !exist
+
+-v       is the old volume mount syntax
+ -v /data/mysql:/var/lib/mysql
+--mount  is the new volume mount syntax
+ --mount type=bind,source=/data/mysql,target=/var/lib/mysql
+
+## Storage Drivers
+# depends on underlying OS
+aufs,zfs,btrfs,Device Mapper, Overlay, Overlay2
