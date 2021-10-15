@@ -321,6 +321,10 @@ ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
 
 # security
 
+# kubesec.io (https://twitter.com/nickwperry/status/1442095087844945934)
+kubectl run -oyaml --dry-run=client nginx --image=nginx > nginx.yaml
+docker run -i kubesec/kubesec scan - < nginx.yaml
+
 # authentication
 # basic, depracated
 curl -vk https://master_node_ip:6443/api/v1/pods -u "userid:passwd

@@ -6,10 +6,33 @@ metadata:
     run: nginx
   name: nginx
 spec:
+  serviceAccountName: nginx
   containers:
   - image: nginx
     name: nginx
-    resources: {}
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 10001
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - all
+    resources:
+      requests:
+        cpu: 500m
+        memory: 500Mi
+      limits:
+        cpu: 500m
+        memory: 500Mi
+    volumeMounts:
+    - mountPath: /var/cache/nginx
+      name: var-cache-nginx
+    - mountPath: /tmp
+      name: tmp
+  volumes:
+  - emptyDir: {}
+    name: var-cache-nginx
+  - emptyDir: {}
+    name: tmp
   dnsPolicy: ClusterFirst
   restartPolicy: Always
-status: {}
