@@ -1,15 +1,31 @@
 https://code.visualstudio.com/docs/languages/markdown
 
-#alias k=kubectl
-k() { kubectl $@; }
+# setup
+
+```bash
+alias k=kubectl
+#k() { kubectl $@; }
 source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;g;}')
 v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl apply -f $1; }
+```
+
+vim configuration for yaml
+
+```vim
+# configuration for vim for... something... *.md perhaps but maybe *.yaml
 # shiftwidth=sw=2
 # tabstop=ts=2
 # softtabstop=sts=-1
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
+```
 
-# pods
+# markdownlint
+
+See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file.
+<!-- markdownlint-disable MD022 MD031 -->
+
+# pods (po)
+```bash
 k run redis -n finance --image=redis
 k run nginx-pod --image=nginx:alpine
 k run redis --image=redis:alpine --labels='tier=db,foo=bar'
@@ -25,47 +41,69 @@ kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o y
   906  k get po -o jsonpath="{.items[*].spec.containers[*].image}"
   907  vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
   908  watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
+```
 
 # replicasets (rs)
+```bash
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
 kubectl scale replicaset new-replica-set --replicas=5
 kubectl edit replicaset new-replica-set
+```
 
-# deployments
+# deployments (deploy)
+```bash
 kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
 k create deployment webapp --image=kodekloud/webapp-color --replicas=3
 k create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
 k set image deployment nginx nginx=nginx:1.18
 kubectl get all
+```
 
-# services
+# services (svc)
+```bash
 k create svc clusterip redis-service --tcp=6379:6379  # worked in practice test but should use expose
 k expose pod redis --name=redis-service --port=6379
+```
 
-# namespaces
+# namespaces (ns)
+```bash
 k create ns dev-ns
 k create deployment redis-deploy -n dev-ns --image=redis --replicas=2
+```
 
-# describe
+# common verbs/ations
+
+## describe
+```bash
 k describe $(k get po -o name|head -1)
+```
 
-# replace
+## replace
+```bash
 k replace -f nginx.yaml
+```
 
-# delete
+## delete
+```bash
 k delete $(k get po -o name)
+```
 
-# generate manifest
+## generate manifest
+```bash
 kubectl run nginx --image=nginx --dry-run=client -o yaml
+```
 
 # labels and selectors
+
 ## labels in spec>selector and spec>template must match
+```bash
 k get po --selector app=foo
 k get po --selector env=dev|grep -vc NAME
 k get all --selector env=prod|egrep -vc '^$|NAME'
 k get all --selector env=prod|grep -c ^[a-z]
 k get all --selector env=prod --no-headers|wc -l
 k get all --selector env=prod,bu=finance,tier=frontend --no-headers
+```
 
 # taints and tolerations
 ## taint-effect is what happens to pods that do not tolerate the taint
@@ -166,6 +204,7 @@ k top pod
 k set image deployment/myapp nginx=nginx:1.9.1
 #                            ^^^^^-The name of the container inside the pod
 k edit deployment/myapp
+k annotate deployment/myapp kubernetes.io/change-cause="foo"  # replace deprecated --record
 k rollout status deployment/myapp
 k rollout history deployment/myapp
 k rollout undo deployment/myapp
@@ -206,6 +245,8 @@ docker run --rm -ti -p 8080:8080 -e APP_COLOR=blue kodekloud/webapp-color
 k create configmap --from-literal=APP_COLOR=green \
                    --from-literal=APP_MOD=prod
 k create configmap --from-file=app_config.properties
+# use the contents of an entire directory:
+k create configmap tomd-test-ssl-certs --from-file=path/to/dir
 #apiVersion: v1
 #kind: ConfigMap
 #metadata:
@@ -295,6 +336,11 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 kubectl uncordon controlplane
+# oneliners (for unjoined node)
+sudo yum makecache -y fast && yum list --showduplicates kubeadm --disableexcludes=kubernetes
+ver=1.21.2
+sudo yum install -y kubeadm-${ver?}-0 --disableexcludes=kubernetes
+sudo yum install -y kubelet-${ver?}-0 kubectl-$ver-0 --disableexcludes=kubernetes && sudo systemctl daemon-reload && sudo systemctl restart kubelet
 
 ## workers
 kubectl drain node01 --ignore-daemonsets --force
@@ -571,7 +617,6 @@ spec:
 in the from: or to: sections,
  each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
  without a hyphen prefix it is a criteria for a rule and they are all AND'd together. ie. must match ALL criteria
-
 # Docker Storage
 /var/lib/docker
 +aufs
@@ -589,3 +634,12 @@ in the from: or to: sections,
 ## Storage Drivers
 # depends on underlying OS
 aufs,zfs,btrfs,Device Mapper, Overlay, Overlay2
+
+# PVs
+# https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html
+kubectl exec webapp -- cat /log/app.log
+
+# PVCs
+access mode must match the pv
+
+
