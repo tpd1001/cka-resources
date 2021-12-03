@@ -1,6 +1,6 @@
-https://code.visualstudio.com/docs/languages/markdown
+# Title Will Go Here
 
-# setup
+## setup
 
 ```bash
 alias k=kubectl
@@ -19,12 +19,16 @@ vim configuration for yaml
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 ```
 
-# markdownlint
+## markdown
+
+Markdown [docs](https://code.visualstudio.com/docs/languages/markdown)
+
+### markdownlint
 
 See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file.
 <!-- markdownlint-disable MD022 MD031 -->
 
-# pods (po)
+## pods (po)
 ```bash
 k run redis -n finance --image=redis
 k run nginx-pod --image=nginx:alpine
@@ -43,14 +47,14 @@ kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o y
   908  watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
 ```
 
-# replicasets (rs)
+## replicasets (rs)
 ```bash
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
 kubectl scale replicaset new-replica-set --replicas=5
 kubectl edit replicaset new-replica-set
 ```
 
-# deployments (deploy)
+## deployments (deploy)
 ```bash
 kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
 k create deployment webapp --image=kodekloud/webapp-color --replicas=3
@@ -59,43 +63,45 @@ k set image deployment nginx nginx=nginx:1.18
 kubectl get all
 ```
 
-# services (svc)
+## services (svc)
 ```bash
 k create svc clusterip redis-service --tcp=6379:6379  # worked in practice test but should use expose
 k expose pod redis --name=redis-service --port=6379
 ```
 
-# namespaces (ns)
+## namespaces (ns)
 ```bash
 k create ns dev-ns
 k create deployment redis-deploy -n dev-ns --image=redis --replicas=2
 ```
 
-# common verbs/ations
+## common verbs/ations
 
-## describe
+### describe
 ```bash
 k describe $(k get po -o name|head -1)
 ```
 
-## replace
+### replace
 ```bash
 k replace -f nginx.yaml
 ```
 
-## delete
+### delete
 ```bash
 k delete $(k get po -o name)
 ```
 
-## generate manifest
+### generate manifest
 ```bash
 kubectl run nginx --image=nginx --dry-run=client -o yaml
 ```
 
-# labels and selectors
+# === markdownified to here ===
 
-## labels in spec>selector and spec>template must match
+## labels and selectors
+
+### labels in spec>selector and spec>template must match
 ```bash
 k get po --selector app=foo
 k get po --selector env=dev|grep -vc NAME
@@ -105,11 +111,11 @@ k get all --selector env=prod --no-headers|wc -l
 k get all --selector env=prod,bu=finance,tier=frontend --no-headers
 ```
 
-# taints and tolerations
-## taint-effect is what happens to pods that do not tolerate the taint
-### NoSchedule
-### PreferNoSchedule
-### NoExecute
+## taints and tolerations
+### taint-effect is what happens to pods that do not tolerate the taint
+#### NoSchedule
+#### PreferNoSchedule
+#### NoExecute
 # permit master to run pods
 k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
 # prevent master from running pods again (defaut)
@@ -179,9 +185,9 @@ ls .*  # dummy command to close italics
 k run static-pod-nginx --image=nginx --dry-run=client -o yaml|egrep -v 'creationTimestamp:|resources:|status:|Policy:'>static-pod-nginx.yaml
 
 # multiple schedulers
-# https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/
-# https://jvns.ca/blog/2017/07/27/how-does-the-kubernetes-scheduler-work/
-# https://stackoverflow.com/questions/28857993/how-does-kubernetes-scheduler-work/28874577#28874577
+* [advanced-scheduling-in-kubernetes](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/)
+* [how-does-the-kubernetes-scheduler-work](https://jvns.ca/blog/2017/07/27/how-does-the-kubernetes-scheduler-work/)
+* [how-does-kubernetes-scheduler-work](https://stackoverflow.com/questions/28857993/how-does-kubernetes-scheduler-work/28874577#28874577)
 ## use /etc/kubernetes/manifests/kube-scheduler.yaml as a source
 ## add --scheduler-name= option
 ## change --leader-elect to false
@@ -315,10 +321,12 @@ kubectl describe pod blue  # check the state field of the initContainer and reas
     name: red-init
 
 # cluster upgrades
-https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
+[kubeadm upgrade](https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
+```
 k drain node01 --ignore-daemonsets
 k cordon node01
 k uncordon node01
+```
 
 ## controlplane
 kubeadm version -o short
@@ -367,9 +375,11 @@ ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
 
 # security
 
-# kubesec.io (https://twitter.com/nickwperry/status/1442095087844945934)
+Nick Perry [kubesec.io](https://twitter.com/nickwperry/status/1442095087844945934)
+```
 kubectl run -oyaml --dry-run=client nginx --image=nginx > nginx.yaml
 docker run -i kubesec/kubesec scan - < nginx.yaml
+```
 
 # authentication
 # basic, depracated
