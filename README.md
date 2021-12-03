@@ -414,7 +414,7 @@ spec:
   usages:
   - digital signature
   - key encipherment
-  - server 
+  - server
   signerName: kubernetes.io/kube-apiserver-client
   # cat jane.csr|base64
   request:
@@ -645,11 +645,64 @@ in the from: or to: sections,
 # depends on underlying OS
 aufs,zfs,btrfs,Device Mapper, Overlay, Overlay2
 
-# PVs
-# https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html
-kubectl exec webapp -- cat /log/app.log
+# === markdownified below ===
 
-# PVCs
+## Persistent Volumes (pv)
+
+* [kubernetes-volumes-example-nfs-persistent-volume](https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html)
+
+NB. volumes, plural!
+```yaml
+spec:
+  containers:
+  - image: nginx:alpine
+    name: nginx
+  # NB. volumes, plural!
+  volumes:
+    - name: local-pvc
+      persistentVolumeClaim:
+        claimName: local-pvc
+```
+
+```bash
+kubectl exec webapp -- cat /log/app.log
+```
+
+## Persistent Volume Claims (pvc)
 access mode must match the pv
 
+### pod mounts
+NB. Mounts, plural!
+```yaml
+spec:
+  containers:
+  - image: nginx:alpine
+    name: nginx
+    # NB. Mounts, plural!
+    volumeMounts:
+    - name: local-pvc
+      mountPath: "/var/www/html"
+```
 
+## Storge Classes (sc)
+`k get sc`
+### provisioner
+```bash
+k describe sc ${x?} | grep '"provisioner":'
+k describe sc portworx-io-priority-high |awk -F= '/"provisioner":/{print $2}'|jq '.'
+k describe sc portworx-io-priority-high |awk -F= '/^Annotations/{print $2}'|jq '.'
+```
+#### no dynamic provisioning
+```bash
+k describe sc ${x?} | grep 'no-provision'
+```
+#### check pvc events
+A pod needs to be created as a consumer or it remains in "pending"
+```bash
+k describe pvc local-pvc
+```
+and look for events
+
+The example Storage Class called `local-storage` makes use of `VolumeBindingMode` set to `WaitForFirstConsumer`. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created.
+
+## NEXT
