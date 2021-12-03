@@ -1,0 +1,2 @@
+NAME                        IMAGE                   READY   STATUS    RESTARTS   AGE     IP            NODE
+metadata.name               spec.containers[].image tbc     status.phase   status.containerStatuses[].restartCount          tbc     status.podIP    spec.nodeName
