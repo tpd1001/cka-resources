@@ -1,0 +1,14 @@
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: jane
+spec:
+  groups:
+  - system:authenticated
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  signerName: kubernetes.io/kube-apiserver-client
+  # cat jane.csr|base64|sed 's/^/      /'>>csr.yaml
+  request:
