@@ -1,0 +1,1 @@
+Run the command: kubectl get pv,pvc and look under the Access Modes section. The Access Modes set on the PV and the PVC do not match.

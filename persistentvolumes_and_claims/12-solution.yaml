@@ -1,0 +1,10 @@
+# add the following checking for duplicate sections in both containers & volumes
+# k delete po webapp  # first
+  containers:
+    volumeMounts:
+    - mountPath: /log
+      name: zzz
+  volumes:
+  - name: zzz
+    persistentVolumeClaim:
+      claimName: claim-log-1
