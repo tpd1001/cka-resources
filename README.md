@@ -741,4 +741,128 @@ and look for events
 
 The example Storage Class called `local-storage` makes use of `VolumeBindingMode` set to `WaitForFirstConsumer`. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created.
 
-## NEXT
+## Networking
+
+### Prerequisites
+
+#### Linux Networking
+
+* [bash ip completion](https://github.com/GArik/bash-completion)
+
+Switching & Routing
+
+```bash
+export dev=eth0
+ip link
+ip addr add 192.168.1.10/24 dev $dev
+vim /etc/network/interfaces  # <= make IPs permanent here
+ip route add 192.168.2.0/24 via 192.168.1.1
+ip route add default via 192.168.1.1  # or 0.0.0.0
+echo 1 > /proc/sys/net/ipv4/ip_forward
+```
+
+DNS
+
+```bash
+cat /etc/resolv.conf  # nameserver, search
+grep ^hosts /etc/nsswitch.conf
+```
+
+CoreDNS
+
+* [Source](https://github.com/coredns)
+* [Docs](https://github.com/kubernetes/dns/blob/master/docs/specification.md)
+* [Plugin](https://coredns.io/plugins/kubernetes/)
+
+#### Network Namespaces
+
+```bash
+ip netns add red
+ip netns add blue
+ip netns exec red ip link  # exec ip command inside a netns
+ip -n red link             # or with this
+
+ip netns exec red arp
+ip netns exec red route
+```
+
+a virtual ethernet pair/cable is often called a pipe
+
+```bash
+ip link add veth-red type veth peer name veth-blue   # create pipe
+ip link set veth-red  netns red                      # attach pipe to interface
+ip link set veth-blue netns blue                     # ...at each end
+ip -n red  addr add 192.168.15.1 dev veth-red        # assign IP
+ip -n blue addr add 192.168.15.2 dev veth-blue       # ...to each namespace
+ip -n red  link set veth-red  up                     # bring up interface
+ip -n blue link set veth-blue up                     # ...in each namespace
+ip netns exec red  ping 192.168.15.2                 # ping blue IP
+ip netns exec red  arp                               # identified its neighbour
+ip netns exec blue arp                               # ...in each namespace
+arp                                                  # but the host has no visibility
+```
+
+virtual switch
+
+* linux bridge
+* Open vSwitch
+
+```bash
+ip link add
+ip link add v-net-0 type bridge                         # create vswitch (bridge)
+ip link set dev v-net-0 up                              # bring up the vswitch
+ip -n veth-red link-del veth-red                        # del link, other end auto-del
+ip link add veth-red  type veth peer name veth-red-br   # create pipe for red
+ip link add veth-blue type veth peer name veth-blue-br  # ...and blue
+ip link set veth-red  netns red                         # attach pipe to red ns
+ip link set veth-blue netns blue                        # ...and blue
+ip link set veth-red-br  master v-net-0                 # attach pipe to red ns
+ip link set veth-blue-br master v-net-0                 # ...and blue
+ip -n red  addr add 192.168.15.1 dev veth-red           # assign IP
+ip -n blue addr add 192.168.15.2 dev veth-blue          # ...to each namespace
+ip -n red  link set veth-red  up                        # bring up interface
+ip -n blue link set veth-blue up                        # ...in each namespace
+ip addr add 192.168.15.5/24 dev v-net-0                 # assign IP for host
+ip addr add 192.168.15.5/24 dev v-net-0                 # assign IP for host
+ping -c3 192.168.15.1                                   # ping from host
+ip netns exec blue ping 192.168.1.3                     # destination unreachable
+ip netns exec blue \
+ ip route add 192.168.1.0/24 via 192.168.15.5           # route to host network
+ip netns exec blue ping 192.168.1.3                     # no reply, need NAT
+iptables -t nat -A POSTROUTING \
+ -s 192.168.15.0/24 -j MASQUERADE                       # add SNAT
+ip netns exec blue ping 192.168.1.3                     # now reachable
+ip netns exec blue ping 8.8.8.8                         # destination unreachable
+ip netns exec blue \
+ ip route add default via 192.168.15.5                  # route via host
+ip netns exec blue ping 8.8.8.8                         # Internet-a-go-go!
+iptables -t nat -A PREROUTING \
+ --dport 80 --to-destination 192.168.15.2:80 -j DNAT    # port forward rule to blue ns
+```
+
+#### Docker Networking
+
+tbc
+
+#### CNI
+
+tbc
+
+### Cluster Networking
+
+tbc
+
+### CNI in Kubernetes
+
+```bash
+vim -c ":set syntax=sh" /etc/systemd/system/multi-user.target.wants/kubelet.service
+ps -ef|grep kubelet|grep cni
+sudo -p four: vim -c ":set syntax=sh" /var/lib/kubelet/config.yaml
+ls /opt/cni/bin/
+ls /etc/cni/net.d/
+cat /etc/cni/net.d/10-*|jq '.'
+```
+
+#### CNI weave
+
+tbc
