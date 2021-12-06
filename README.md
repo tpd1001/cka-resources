@@ -9,6 +9,11 @@ source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;
 v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl apply -f $1; }
 ```
 
+consider these:
+* [kubectl aliases](https://github.com/ahmetb/kubectl-aliases)
+* [Getting started with K8s](https://edgehog.blog/getting-started-with-k8s-core-concepts-135fb570462e)
+* [KubeCost](https://thenewstack.io/kubecost-monitor-kubernetes-costs-with-kubectl/)
+
 vim configuration for yaml
 
 ```vim
@@ -19,14 +24,30 @@ vim configuration for yaml
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 ```
 
+iTerm2 on Mac stuff
+
+* [Captured Output](https://iterm2.com/documentation-captured-output.html)
+* [Triggers](https://iterm2.com/documentation-triggers.html)
+* [Shell Integration](https://iterm2.com/documentation-shell-integration.html)
+
 ## markdown
 
-Markdown [docs](https://code.visualstudio.com/docs/languages/markdown)
+* Markdown [docs](https://code.visualstudio.com/docs/languages/markdown)
+* [VS Code as Markdown Note-Taking App](https://helgeklein.com/blog/vs-code-as-markdown-note-taking-app/)
 
 ### markdownlint
 
 See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file.
 <!-- markdownlint-disable MD022 MD031 -->
+
+## What's New
+
+### 1.22
+
+Alpha feature
+
+* [Using Kubernetes Ephemeral Containers for Troubleshooting
+](https://loft.sh/blog/using-kubernetes-ephemeral-containers-for-troubleshooting/)
 
 ## pods (po)
 ```bash
@@ -198,11 +219,16 @@ echo -e '    schedulerName: my-scheduler' >> pod.yaml
 k create -f pod.yaml
 k get events
 
-# monitoring
+## monitoring
+
+* [kubernetes-metrics-server](https://github.com/kodekloudhub/kubernetes-metrics-server)
+
+```bash
 git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
 k create -f kubernetes-metrics-server
 k top node
 k top pod
+```
 
 # application lifecycle
 ## RollingUpdate - a few pods at a time
@@ -266,7 +292,10 @@ k create configmap tomd-test-ssl-certs --from-file=path/to/dir
 #      configMapRef:
 #      name: app-config
 
-# secrets
+## secrets
+
+* [encrypt-data](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+
 k create secret generic app-secret --from-literal=DB_PASSWD=green \
                                    --from-literal=MYSQL_PASSWD=prod
 k create secret generic app-secret --from-file=app_secret.properties
@@ -372,8 +401,7 @@ service kube-apiserver stop
 ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
 --data-dir /new/data/dir
 
-
-# security
+## security
 
 Nick Perry [kubesec.io](https://twitter.com/nickwperry/status/1442095087844945934)
 ```
@@ -618,11 +646,19 @@ spec:
       capabilities:
         add: ["MAC_ADMIN"]
 
-# Network Policies
-## Ingress is to the pod
-## Egress  is from the pod
-## only looking at direction in which the traffic originated
-## the response is not in scope
+## Network Policies
+
+* [webapp-conntest](https://github.com/kodekloudhub/webapp-conntest)
+* [docker hub](https://hub.docker.com/r/kodekloud/webapp-conntest)
+
+```bash
+docker pull kodekloud/webapp-conntest
+```
+
+### Ingress is to the pod
+### Egress  is from the pod
+### only looking at direction in which the traffic originated
+### the response is not in scope
 
 in the from: or to: sections,
  each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
