@@ -39,6 +39,7 @@ iTerm2 on Mac stuff
 
 See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file.
 <!-- markdownlint-disable MD022 MD031 -->
+Show VS Code preview pane: Cmd-K,V
 
 ## What's New
 
@@ -840,9 +841,37 @@ iptables -t nat -A PREROUTING \
  --dport 80 --to-destination 192.168.15.2:80 -j DNAT    # port forward rule to blue ns
 ```
 
+##### FAQ
+
+While testing the Network Namespaces, if you come across issues where you can't ping one namespace from the other, make sure you set the NETMASK while setting IP Address. ie: 192.168.1.10/24
+
+```
+ip -n red addr add 192.168.1.10/24 dev veth-red
+```
+
+Another thing to check is FirewallD/IP Table rules. Either add rules to IP Tables to allow traffic from one namespace to another. Or disable IP Tables all together (Only in a learning environment).
+
 #### Docker Networking
 
 tbc
+
+```bash
+docker run --network none nginx  # cannot talk to each other or outside world
+docker run --network host nginx  # only on local host http://192.168.1.2:80
+docker run nginx                 # bridge 172.17.0.0/16 by default
+                                 # creates a network namespace
+# equivalent to
+ip link add docker0 type bridge
+ip addr                          # docker0 is an interface to the host so had an IP
+docker run nginx:1.21.1          # creates a network namespace
+ip netns                         # generated hex ID
+docker inspect ${containerid?}   # netns is end of SandboxID
+```
+
+```bash
+docker network ls  # name is bridge by default
+ip link            # but called docker0 by the host
+```
 
 #### CNI
 
@@ -866,3 +895,68 @@ cat /etc/cni/net.d/10-*|jq '.'
 #### CNI weave
 
 tbc
+
+## Design a Kubernetes Cluster
+
+Maximums
+
+* 5000 nodes
+* 150,000 pods
+* 300,000 total containers
+* 100 pods per node
+
+### Topology
+
+* API Server
+  * active-active
+  * one node addressed, through LB
+* Controller Manager
+  * active-standby
+  * leader election by getting lock on Kube-controller-manager endpoint
+  * lease for 15s, leader renews every 10s (by default)
+* etcd
+  * stacked topology
+    * easier, less resilient/fault tolerant
+  * external etcd topology
+    * harder
+  * api sever has a list of etcd servers
+  * since etcd is distributed, can read/write to any instance
+  * distribued consensus with RAFT protocol
+  * write complete if can be confirmed on majority of cluster nodes (quorum)
+  * quorum = N/2+1 (should be an odd number of nodes)
+
+```
+--initial-cluster-peer="one...,two..."  # list of peers
+export ETCDCTL_API=3
+etcdctl put name john
+etcdctl get name
+etcdctl get / --prefix --keys-only
+```
+
+#### Important Update: Kubernetes the Hard Way
+
+Installing Kubernetes the hard way can help you gain a better understanding of putting together the different components manually.
+
+An optional series on this is available at our youtube channel here:
+[Install Kubernetes Cluster from Scratch](https://www.youtube.com/watch?v=uUupRagM7m0&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo)
+
+The GIT Repo for this tutorial can be found here:
+[kubernetes-the-hard-way](https://github.com/mmumshad/kubernetes-the-hard-way)
+
+## Install Kubernetes the kubeadm way
+
+* provision nodes
+* install container runtime (docker)
+* install kubeadm
+* initialise master
+* configure pod network
+* join worker nodes to master node
+
+### Resources
+
+The vagrant file used in the next video is available here: 
+[certified-kubernetes-administrator-course](https://github.com/kodekloudhub/certified-kubernetes-administrator-course)
+
+Here's the link to the documentation: [install-kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+
+### end
