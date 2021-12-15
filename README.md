@@ -853,8 +853,6 @@ Another thing to check is FirewallD/IP Table rules. Either add rules to IP Table
 
 #### Docker Networking
 
-tbc
-
 ```bash
 docker run --network none nginx  # cannot talk to each other or outside world
 docker run --network host nginx  # only on local host http://192.168.1.2:80
@@ -873,13 +871,63 @@ docker network ls  # name is bridge by default
 ip link            # but called docker0 by the host
 ```
 
-#### CNI
+#### CNI (Container Network Interface)
 
-tbc
+Docker,rkt,Mesos,k8s (all use CNI and it's called implemented as "bridge")
+`bridge` is a plugin for CNI
+
+Other CNI plugin examples:
+
+* bridge, vlan, ipvlan, macvlan, windows
+* dhcp, host-local
+* weave, flannel, cilium, vmwrensx, calico, infoblox
+
+Docker does NOT implement CNI but rather CNM (container network model) so you can't run `docker run --network=cni-bridge nginx` but you could use:
+
+```bash
+docker run --network=none nginx
+bridge add ${id?} /var/run/netns/${id?}
+```
 
 ### Cluster Networking
 
-tbc
+* Must have unique:
+  * hostname
+  * mac
+* Master must have ports open:
+  * 6443 (apiserver)
+  * 10250 (kubelet)
+  * 10251 (scheduler)
+  * 10252 (controller-mgr)
+* Workers must have ports open:
+  * 10250 (kubelet)
+  * 30000-32767 (container services)
+* Etcd
+  * 2379 (etcd server)
+  * 2380 (etcd clients)
+
+Useful commands
+
+```bash
+ip link
+ip link show eth0
+ip addr
+ip addr add 192.168.15.5/24 dev v-net-0
+ip route add 192.168.1.0/24 via 192.168.2.1
+cat /proc/sys/net/ipv4/ip_forward
+arp
+netstat -plnt
+```
+
+### Pod Networking
+
+Every pod must
+
+* havd IP
+* connectivity to all pods on node
+* connectivity to all pods on other nodes
+
+net-script.sh <add|delete>
 
 ### CNI in Kubernetes
 
@@ -892,11 +940,35 @@ ls /etc/cni/net.d/
 cat /etc/cni/net.d/10-*|jq '.'
 ```
 
-#### CNI weave
+### CNI weave (WeaveWorks)
 
-tbc
+an agent/service on each node which communidate with each other
+each agent stores topo
+creates bridge called "weave" (separate to bridge created by docker etc.)
+pod can be attached to multiple bridge networks
+weave ensures pod has route to agent
+agent then takes care of other pods
+peforms encapsulation
 
-## Design a Kubernetes Cluster
+can be deployed ad daemons on node os
+or as daemonset (ideally)
+
+```bash
+k apply -f "...url..."
+k get po -n kube-system
+k logs weave-net-... -n kube-system
+```
+
+### IPAM
+
+The responsibility of the CNI plugin
+* host-local
+* dhcp
+
+weave uses 10.32.0.0/12 by default
+weave assigns a potion (configurable) to each node
+
+## Design a Kubernetes Cluster
 
 Maximums
 
@@ -925,7 +997,7 @@ Maximums
   * write complete if can be confirmed on majority of cluster nodes (quorum)
   * quorum = N/2+1 (should be an odd number of nodes)
 
-```
+```bash
 --initial-cluster-peer="one...,two..."  # list of peers
 export ETCDCTL_API=3
 etcdctl put name john
