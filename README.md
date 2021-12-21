@@ -231,9 +231,12 @@ k top node
 k top pod
 ```
 
-# application lifecycle
-## RollingUpdate - a few pods at a time
-## Recreate      - all destroyed in one go and then all recreated
+## application lifecycle
+
+* RollingUpdate - a few pods at a time
+* Recreate      - all destroyed in one go and then all recreated
+
+```bash
 k set image deployment/myapp nginx=nginx:1.9.1
 #                            ^^^^^-The name of the container inside the pod
 k edit deployment/myapp
@@ -242,6 +245,7 @@ k rollout status deployment/myapp
 k rollout history deployment/myapp
 k rollout undo deployment/myapp
 kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
+```
 
 # Dockerfile commands
 ## kube command == docker entrypoint
