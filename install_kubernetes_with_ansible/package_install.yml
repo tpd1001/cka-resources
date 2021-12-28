@@ -19,6 +19,14 @@
       regexp: swap
       state: absent
 
+  - name: End the play for all hosts
+    meta: end_play
+# you can end the play for a host using:
+# meta: end_host
+# or end the play for all hosts using:
+# meta: end_play
+# source: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html
+
   - name: Update apt cache if outside valid time
     apt:
       update_cache: yes
