@@ -11,7 +11,13 @@
   tasks:
 
   - name: Make the Swap inactive
-    command: swapoff -a
+    shell: |
+      before=$(wc -l /proc/swaps)
+      swapoff -a
+      after=$(wc -l /proc/swaps)
+      if [ "$before" != "$after" ]; then echo CHANGED;fi
+    register: swapoff
+    changed_when: '"CHANGED" in swapoff.stdout'
 
   - name: Remove Swap entry from /etc/fstab.
     lineinfile:
