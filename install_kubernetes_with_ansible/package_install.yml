@@ -1,6 +1,6 @@
 ---
 # ansible-playbook package_install.yaml -k -K
-- hosts: "masters, workers"
+- hosts: "qubenode01, qubenode02"
   remote_user: ansible
   become: yes
   become_method: sudo
@@ -18,6 +18,11 @@
       dest: /etc/fstab
       regexp: swap
       state: absent
+
+  - name: Update apt cache if outside valid time
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
 
   - name: Installing Prerequisites for Kubernetes
     apt:
@@ -86,4 +91,3 @@
       reboot_timeout: 40
       connect_timeout: 60
       test_command: uptime
-
