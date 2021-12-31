@@ -25,6 +25,10 @@ vim configuration for yaml
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 ```
 
+## Markdown and Mac stuff
+
+<details><summary>Expand...</summary>
+
 iTerm2 on Mac stuff
 
 * [Captured Output](https://iterm2.com/documentation-captured-output.html)
@@ -35,12 +39,16 @@ iTerm2 on Mac stuff
 
 * Markdown [docs](https://code.visualstudio.com/docs/languages/markdown)
 * [VS Code as Markdown Note-Taking App](https://helgeklein.com/blog/vs-code-as-markdown-note-taking-app/)
+* [Languages Supported by Github Flavored Markdown](https://www.rubycoloredglasses.com/2013/04/languages-supported-by-github-flavored-markdown/)
+* [collapsed sections](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-collapsed-sections)
 
 ### markdownlint
 
 See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file and these [rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md): [MD022](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md022), [MD031](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md031).
 <!-- markdownlint-disable MD022 MD031 -->
 Show VS Code preview pane: Cmd-K,V
+
+</details>
 
 ## What's New
 
@@ -292,21 +300,25 @@ k rollout undo deployment/myapp
 kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
 ```
 
-# === markdownified to here ===
+## Dockerfile commands
 
-# Dockerfile commands
-## kube command == docker entrypoint
-## kube args    == docker cmd
-## with CMD        command line params get replaced entirely
-## with ENTRYPOINT command line params get appended
-## ENTRYPOINT => command that runs on startup
-## CMD        => default params to command at sartup
-## always specity in json format
-## ENTRYPOINT ["sleep"]
-## CMD ["5"]
-## default command will be "sleep 5"
+* kube command == docker entrypoint
+* kube args    == docker cmd
+* with CMD        command line params get replaced entirely
+* with ENTRYPOINT command line params get appended
+* ENTRYPOINT => command that runs on startup
+* CMD        => default params to command at sartup
+* always specity in json format
 
-# command & args in kubernetes
+```text
+ENTRYPOINT ["sleep"]
+CMD ["5"]
+# default command will be "sleep 5"
+```
+
+## command & args in kubernetes
+
+```yaml
     command: ["printenv"]
     args: ["HOSTNAME", "KUBERNETES_PORT"]
 # or
@@ -315,65 +327,103 @@ kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].im
     args:
     - HOSTNAME
     - KUBERNETES_PORT
+```
 
+## environment variables
 
-# environment variables
+docker command to pass in env vars
+
+```bash
 docker run --rm -ti -p 8080:8080 -e APP_COLOR=blue kodekloud/webapp-color
-#spec:
-#  containers:
-#  - env:
-#    - name: APP_COLOR
-#      value: green
+```
 
-# configmaps
+kubernetes yaml equivalent
+
+```yaml
+spec:
+  containers:
+  - env:
+    - name: APP_COLOR
+      value: green
+```
+
+## configmaps
+
+```bash
 k create configmap --from-literal=APP_COLOR=green \
                    --from-literal=APP_MOD=prod
 k create configmap --from-file=app_config.properties
-# use the contents of an entire directory:
-k create configmap tomd-test-ssl-certs --from-file=path/to/dir
-#apiVersion: v1
-#kind: ConfigMap
-#metadata:
-#  name: app-config
-#data:
-#  APP_COLOR: green
-#  APP_MOD: prod
+```
 
-#    image: foo
-#    envFrom:
-#      configMapRef:
-#      name: app-config
+use the contents of an entire directory:
+
+```bash
+k create configmap tomd-test-ssl-certs --from-file=path/to/dir
+```
+
+or configure in yaml
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: green
+  APP_MOD: prod
+    image: foo
+    envFrom:
+      configMapRef:
+      name: app-config
+```
 
 ## secrets
 
 * [encrypt-data](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
 
+```bash
 k create secret generic app-secret --from-literal=DB_PASSWD=green \
                                    --from-literal=MYSQL_PASSWD=prod
 k create secret generic app-secret --from-file=app_secret.properties
 k describe secret app-secret
 k get secret app-secret -o yaml
-#apiVersion: v
-#kind: Secret
-#metadata:
-#  name: app-secret
-#data:
-#  # encode with: echo -n "password123" | base64
-#  # decode with: echo -n "encodedstring" | base64 --decode
-#  DB_PASSWD: green
-#  MYSQL_PASSWD: prod
+```
 
-#    image: foo
-#    envFrom:
-#      secretRef:
-#      name: app-config
+create with
 
-#volumes:
-#  - name: app-secret-volume
-#    secret:
-#      secretName: app-secret
-ls /opt/app-secret-volumes
-cat /opt/app-secret-volumes/DB_PASSWD
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  # encode with: echo -n "password123" | base64
+  # decode with: echo -n "encodedstring" | base64 --decode
+  DB_PASSWD: green
+  MYSQL_PASSWD: prod
+```
+
+use as env var with
+
+```yaml
+    image: foo
+    envFrom:
+      secretRef:
+      name: app-config
+```
+
+or as a volume with
+
+```yaml
+volumes:
+  - name: app-secret-volume
+    secret:
+      secretName: app-secret
+#ls /opt/app-secret-volumes
+#cat /opt/app-secret-volumes/DB_PASSWD
+```
+
+# === markdownified to here ===
 
 # multi-container pods
 
