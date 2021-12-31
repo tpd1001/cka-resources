@@ -27,6 +27,7 @@ vim configuration for yaml
 
 ## Markdown and Mac stuff
 
+<!-- markdownlint-disable MD022 MD031 MD033 -->
 <details><summary>Expand...</summary>
 
 iTerm2 on Mac stuff
@@ -45,7 +46,6 @@ iTerm2 on Mac stuff
 ### markdownlint
 
 See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file and these [rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md): [MD022](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md022), [MD031](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md031).
-<!-- markdownlint-disable MD022 MD031 -->
 Show VS Code preview pane: Cmd-K,V
 
 </details>
