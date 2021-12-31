@@ -10,6 +10,7 @@ v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kub
 ```
 
 consider these:
+
 * [kubectl aliases](https://github.com/ahmetb/kubectl-aliases)
 * [Getting started with K8s](https://edgehog.blog/getting-started-with-k8s-core-concepts-135fb570462e)
 * [KubeCost](https://thenewstack.io/kubecost-monitor-kubernetes-costs-with-kubectl/)
@@ -37,7 +38,7 @@ iTerm2 on Mac stuff
 
 ### markdownlint
 
-See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file.
+See markdownlint [Configuration](https://github.com/DavidAnson/markdownlint#configuration) and the HTML comments below here in the source file and these [rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md): [MD022](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md022), [MD031](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md#md031).
 <!-- markdownlint-disable MD022 MD031 -->
 Show VS Code preview pane: Cmd-K,V
 
@@ -49,6 +50,11 @@ Alpha feature
 
 * [Using Kubernetes Ephemeral Containers for Troubleshooting
 ](https://loft.sh/blog/using-kubernetes-ephemeral-containers-for-troubleshooting/)
+
+### [1.23](https://loft.sh/blog/kubernetes-1.23-release/)
+
+* Ephemeral containers & [PodSecurity](https://kubernetes.io/docs/concepts/security/pod-security-admission/) move from alpha to beta
+* dual ipv4/ipv6 stack moves to stable/GA
 
 ## pods (po)
 ```bash
