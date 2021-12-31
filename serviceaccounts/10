@@ -1,0 +1,1 @@
+k create sa dashboard-sa
