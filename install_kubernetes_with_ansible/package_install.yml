@@ -1,6 +1,6 @@
 ---
 # ansible-playbook package_install.yaml -k -K
-- hosts: "qubenode01, qubenode02"
+- hosts: "qube"
   remote_user: ansible
   become: yes
   become_method: sudo
@@ -24,14 +24,6 @@
       dest: /etc/fstab
       regexp: swap
       state: absent
-
-  - name: End the play for all hosts
-    meta: end_play
-# you can end the play for a host using:
-# meta: end_host
-# or end the play for all hosts using:
-# meta: end_play
-# source: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html
 
   - name: Update apt cache if outside valid time
     apt:
@@ -89,10 +81,13 @@
   - name: Installing Kubernetes Cluster Packages.
     apt:
       name:
-        - kubeadm
-        - kubectl
-        - kubelet
+        - kubeadm=1.23.0-00
+        - kubectl=1.23.0-00
+        - kubelet=1.23.0-00
       state: present
+
+  - name: End the play for all hosts
+    meta: end_play
 
   - name: Enable service kubelet, and enable persistently
     service:
