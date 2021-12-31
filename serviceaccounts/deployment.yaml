@@ -1,4 +1,5 @@
 # k port-forward $(kubectl get po -o name -l name=web-dashboard) 11180:8080
+# open http://localhost:11180/
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,3 +39,4 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
+      serviceAccountName: dashboard-sa
