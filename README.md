@@ -125,11 +125,10 @@ k delete $(k get po -o name)
 kubectl run nginx --image=nginx --dry-run=client -o yaml
 ```
 
-# === markdownified to here ===
-
 ## labels and selectors
 
-### labels in spec>selector and spec>template must match
+labels in spec>selector and spec>template must match
+
 ```bash
 k get po --selector app=foo
 k get po --selector env=dev|grep -vc NAME
@@ -140,29 +139,47 @@ k get all --selector env=prod,bu=finance,tier=frontend --no-headers
 ```
 
 ## taints and tolerations
-### taint-effect is what happens to pods that do not tolerate the taint
-#### NoSchedule
-#### PreferNoSchedule
-#### NoExecute
-# permit master to run pods
+
+taint-effect is what happens to pods that do not tolerate the taint
+
+* NoSchedule
+* PreferNoSchedule
+* NoExecute
+
+### permit master to run pods
+
+```bash
 k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
 # prevent master from running pods again (defaut)
 k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
+```
 
+### other taints
+
+```bash
 k taint nodes node1 key=value:taint-effect
 k taint nodes node1 app=blue:NoSchedule
 k taint nodes node1 app=blue:NoSchedule-  # to remove
-#spec>tolerations>- key: "app" (all on quotes)
+
+#spec>tolerations>- key: "app" (all in quotes)
 k describe node kubemaster | grep Taint
+
 #k get po bee -o yaml | sed '/tolerations:/a\  - key: spray\n    value: mortein\n    effect: NoSchedule\n    operator: Equal'|k apply -f -
 k get po bee -o yaml | sed '/tolerations:/a\  - effect: NoSchedule\n    key: spray\n    operator: Equal\n    value: mortein'|k apply -f -
+```
 
-# node selectors
-#label nodes first
-#spec:>nodeSelector:>size:Large
+## node selectors
+
+* label nodes first
+* spec:>nodeSelector:>size:Large
+
+```bash
 k label nodes node1 size=Large
+```
 
-# node affinity
+## node affinity
+
+```yaml
 #spec:>nodeAffinity:
       affinity:
         podAntiAffinity:
@@ -191,12 +208,18 @@ k label nodes node1 size=Large
             - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+```
 
-# resources
+## resources
+
+```bash
 k describe po elephant | grep Reason
 k describe po elephant | sed -n '/Last State/{;N;p}'
+```
 
-# daemonsets
+## daemonsets
+
+```bash
 k get ds -A
 k get ds -n kube-system kube-flannel-ds
 k describe ds kube-flannel-ds|grep Image
@@ -204,27 +227,43 @@ k get ds kube-flannel-ds -o yaml
 k create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d' > d.yaml
 k create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' > ds.yaml
 kubectl create -f ds.yaml
+```
 
-# static pods
-## as an option in kublet.service (systemd)
-## or as a --config switch to a file containing the staticPodPath opt
-sudo grep staticPodPath $(ps -wwwaux|sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p'|awk '/^\//{print $1}')
+## static pods
+
+* as an option in kublet.service (systemd)
+* or as a --config switch to a file containing the staticPodPath opt
+
+```bash
+sudo grep staticPodPath $(ps -wwwaux | \
+ sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p' | \
+ awk '/^\//{print $1}')
+
 ls .*  # dummy command to close italics
-k run static-pod-nginx --image=nginx --dry-run=client -o yaml|egrep -v 'creationTimestamp:|resources:|status:|Policy:'>static-pod-nginx.yaml
 
-# multiple schedulers
+k run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
+ egrep -v 'creationTimestamp:|resources:|status:|Policy:' \
+ >static-pod-nginx.yaml
+```
+
+## multiple schedulers
+
 * [advanced-scheduling-in-kubernetes](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/)
 * [how-does-the-kubernetes-scheduler-work](https://jvns.ca/blog/2017/07/27/how-does-the-kubernetes-scheduler-work/)
 * [how-does-kubernetes-scheduler-work](https://stackoverflow.com/questions/28857993/how-does-kubernetes-scheduler-work/28874577#28874577)
-## use /etc/kubernetes/manifests/kube-scheduler.yaml as a source
-## add --scheduler-name= option
-## change --leader-elect to false
-## change --port to your desired port
-## update port in probes to the same as above
+
+1. use /etc/kubernetes/manifests/kube-scheduler.yaml as a source
+2. add --scheduler-name= option
+3. change --leader-elect to false
+4. change --port to your desired port
+5. update port in probes to the same as above
+
+```bash
 k create -f my-scheduler.yaml  # not as a static pod
 echo -e '    schedulerName: my-scheduler' >> pod.yaml
 k create -f pod.yaml
 k get events
+```
 
 ## monitoring
 
@@ -252,6 +291,8 @@ k rollout history deployment/myapp
 k rollout undo deployment/myapp
 kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
 ```
+
+# === markdownified to here ===
 
 # Dockerfile commands
 ## kube command == docker entrypoint
