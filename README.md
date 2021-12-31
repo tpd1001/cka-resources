@@ -350,15 +350,15 @@ spec:
 ## configmaps
 
 ```bash
-k create configmap --from-literal=APP_COLOR=green \
-                   --from-literal=APP_MOD=prod
-k create configmap --from-file=app_config.properties
+kubectl create configmap --from-literal=APP_COLOR=green \
+                         --from-literal=APP_MOD=prod
+kubectl create configmap --from-file=app_config.properties
 ```
 
 use the contents of an entire directory:
 
 ```bash
-k create configmap tomd-test-ssl-certs --from-file=path/to/dir
+kubectl create configmap tomd-test-ssl-certs --from-file=path/to/dir
 ```
 
 or configure in yaml
@@ -382,11 +382,11 @@ data:
 * [encrypt-data](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
 
 ```bash
-k create secret generic app-secret --from-literal=DB_PASSWD=green \
+kubectl create secret generic app-secret --from-literal=DB_PASSWD=green \
                                    --from-literal=MYSQL_PASSWD=prod
-k create secret generic app-secret --from-file=app_secret.properties
-k describe secret app-secret
-k get secret app-secret -o yaml
+kubectl create secret generic app-secret --from-file=app_secret.properties
+kubectl describe secret app-secret
+kubectl get secret app-secret -o yaml
 ```
 
 create with
@@ -423,10 +423,9 @@ volumes:
 #cat /opt/app-secret-volumes/DB_PASSWD
 ```
 
-# === markdownified to here ===
+## multi-container pods
 
-# multi-container pods
-
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -439,10 +438,15 @@ spec:
     name: lemon
   - image: redis
     name: gold
+```
 
-# init containers
+## init containers
+
+```bash
 kubectl describe pod blue  # check the state field of the initContainer and reason: Completed
+```
 
+```yaml
   initContainers:
   - command:
     - sh
@@ -450,16 +454,21 @@ kubectl describe pod blue  # check the state field of the initContainer and reas
     - sleep 600
     image: busybox
     name: red-init
+```
 
-# cluster upgrades
+## cluster upgrades
+
 [kubeadm upgrade](https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
-```
-k drain node01 --ignore-daemonsets
-k cordon node01
-k uncordon node01
+
+```bash
+kubectl drain node01 --ignore-daemonsets
+kubectl cordon node01
+kubectl uncordon node01
 ```
 
-## controlplane
+### controlplane
+
+```bash
 kubeadm version -o short
 kubectl drain controlplane --ignore-daemonsets
 apt update && apt-cache madison kubeadm
@@ -480,8 +489,11 @@ sudo yum makecache -y fast && yum list --showduplicates kubeadm --disableexclude
 ver=1.21.2
 sudo yum install -y kubeadm-${ver?}-0 --disableexcludes=kubernetes
 sudo yum install -y kubelet-${ver?}-0 kubectl-$ver-0 --disableexcludes=kubernetes && sudo systemctl daemon-reload && sudo systemctl restart kubelet
+```
 
-## workers
+### workers
+
+```bash
 kubectl drain node01 --ignore-daemonsets --force
 apt update && apt-cache madison kubeadm
 apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
@@ -493,30 +505,48 @@ yum list docker-ce --showduplicates
 # ===
 sudo systemctl daemon-reload && sudo systemctl restart kubelet
 kubectl uncordon node01
+```
 
-# backup and restore
-kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+## backup and restore
+
+### backup
+
+```bash
+kubectl get all --all-namespaces -o yaml \
+ > all-deploy-services.yaml
 ETCDCTL_API=3 etcdctl snapshot save snapshot.db
 ETCDCTL_API=3 etcdctl snapshot status snapshot.db
-## restore
+```
+
+### restore
+
+```bash
 service kube-apiserver stop
 ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
---data-dir /new/data/dir
+ --data-dir /new/data/dir
+```
 
 ## security
 
 Nick Perry [kubesec.io](https://twitter.com/nickwperry/status/1442095087844945934)
-```
+
+```bash
 kubectl run -oyaml --dry-run=client nginx --image=nginx > nginx.yaml
 docker run -i kubesec/kubesec scan - < nginx.yaml
 ```
 
-# authentication
-# basic, depracated
+### authentication
+
+basic, depracated
+
+```bash
 curl -vk https://master_node_ip:6443/api/v1/pods -u "userid:passwd
 curl -vk https://master_node_ip:6443/api/v1/pods --header "Authorization: Bearer ${token?}"
+```
 
-# view certificates
+view certificates
+
+```bash
 k get po kube-apiserver-controlplane -o yaml -n kube-system|grep cert
 k get po etcd-controlplane -o yaml -n kube-system|grep cert
 openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt
@@ -527,12 +557,19 @@ for f in $(grep pki /etc/kubernetes/manifests/etcd.yaml|egrep 'key|crt'|awk -F= 
 vim /etc/kubernetes/manifests/etcd.yaml
 docker logs $(docker ps|grep -v pause:|awk '/etcd/{print $1}')
 grep pki /etc/kubernetes/manifests/kube-apiserver.yaml|grep '\-ca'
+```
 
-# certificates API
+certificates API
+
+```bash
 openssl genrsa -out jane.key 2048
 openssl req -new -key jane.key -subj "/CN=jane" -out jane.csr
-cat jane.csr|base64
+cat jane.csr | base64
+```
 
+csr in yaml
+
+```yaml
 # v1.19 = v1
 apiVersion: certificates.k8s.io/v1beta1
 kind: CertificateSigningRequest
@@ -549,7 +586,11 @@ spec:
   # cat jane.csr|base64
   request:
       base64text
+```
 
+approving csr
+
+```bash
 kubectl get csr
 kubectl certificate approve jane
 kubectl get csr -o yaml
@@ -557,8 +598,11 @@ cat jane.b64|base64 --decode
 
 cat akshay.csr|base64|sed 's/^/      /'>>akshay.yaml
 sed -i "/request:/s/$/ $(echo $csr|sed 's/ //g')/" a
+```
 
-# KubeConfig
+### KubeConfig
+
+```bash
 curl https://kubecluster:6443/api/v1/nodes \
  --key admin.key \
  --cert admin.crt \
@@ -581,31 +625,49 @@ kubectl config -h
 
 k config --kubeconfig=my-kube-config current-context
 k config --kubeconfig=my-kube-config use-context research
+```
 
+```yaml
 contexts:
 - name: kubernetes-admin@kubernetes
   context:
     cluster: kubernetes
     namespace: default
     user: kubernetes-admin
+```
 
-# better to use full path to crt etc. or base64 encode it
+better to use full path to crt etc. or base64 encode it
 
-# API Groups
+### API Groups
+
+```bash
 curl -k https://controlplane:6443/ --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
 curl -k https://controlplane:6443/apis --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
 # =OR=
 kubectl proxy  # starts on localhost:8001 and proxy uses creds from kubeconfig file
 curl -k https://localhost:6443
+```
 
-# Authorisation
+## Authorisation
+
+```bash
 k describe -n kube-system po kube-apiserver-controlplane
-## Node
-## ?BAC
-## Webhook
-## AlwaysAllow?
-## AlwaysDeny?
-## RBAC
+```
+
+### Roles and Role Bindings
+
+What were these bullet points?
+
+* Node
+* ?BAC
+* Webhook
+* AlwaysAllow?
+* AlwaysDeny?
+* RBAC
+
+Role yaml
+
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -617,9 +679,11 @@ rules:
   resources: ["pods"]
   verbs: ["list,"get","create","update","delete"]
   #resourceNames: ["red","blue"]  # optional, specific resources e.g. only certain pods
+```
 
-kubectl create -f developer-role.yaml
+RoleBinding yaml
 
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -634,14 +698,23 @@ roleRef:
 - kind: Role
   name: developer
   verbs: rbac.authorization.k8s.io
+```
 
+```bash
+kubectl create -f developer-role.yaml
 kubectl create -f devuser-developer-binding.yaml
+```
 
+```bash
 k get roles
 k get rolebindings
 k describe role developer
 k describe rolebinding devuser-developer-rolebinding
+```
 
+Can I?
+
+```bash
 k auth can-i create deployments
 k auth can-i delete nodes
 k auth can-i create deployments --as dev-user
@@ -649,12 +722,22 @@ k auth can-i create pods        --as dev-user
 k auth can-i create pods        --as dev-user --namespace test
 # can edit in-place
 k edit role developer -n blue
+```
 
-# Cluster Roles and Role Bindings
+### Cluster Roles and Role Bindings
+
+where do these apply?
+I think they apply to the cluster, rather than namespace.
+
+```bash
 k get roles
 k get roles -n kube-system -o yaml
 k get role -n blue developer -o yaml
+```
 
+Cluster Role
+
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -673,9 +756,11 @@ rules:
   - watch
   - create
   - delete
+```
 
-k get rolebinding -n blue dev-user-binding -o yaml
+Cluster RoleBinding
 
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -689,21 +774,30 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
   name: dev-user
+```
 
+```bash
+k get rolebinding -n blue dev-user-binding -o yaml
 k create -f rb.yaml
+```
 
+Can I?
+```bash
 k auth can-i create pods
 k auth can-i create pods --as dev-user
 # don't need to delete & recreate - can edit in-place
 kubectl edit role developer -n blue
+```
 
-# t
+# === markdownified to here ===
+
+# t - what went here?!?!?
 
 # Cluster Roles and Role Bindings
 kubectl api-resources --namespaced=true
 kubectl api-resources --namespaced=false
 
-# Image Security
+### Image Security
 image: docker.io/nginx/nginx
 #                      ^^^^^-- image/repository
 #                ^^^^^-------- user/account
