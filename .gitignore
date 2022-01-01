@@ -1,3 +1,6 @@
+?
+*.yamlk
+*poli*
 # this is for expenses
 booking
 # always ignore
@@ -16,3 +19,6 @@ Kubernetes+-CKA-+0400+-+Application+Lifecycle+Management.pdf
 Kubernetes+-CKA-+0500+-+Cluster+Maintenance-v1.2.pdf
 Kubernetes+-CKA-+0600+-+Security.pdf
 troubleshooting-kubernetes.v2.pdf
+Ingress.pdf
+Kubernetes+-CKA-+0800+-+Networking-v1.2.pdf
+Kubernetes+-CKA-+0900+-+Install-v1.4.pdf
