@@ -7,6 +7,8 @@
   become_user: root
   gather_facts: yes
   connection: ssh
+  vars:
+    kube_version: 1.23.0-00
 
   tasks:
 
@@ -81,9 +83,9 @@
   - name: Installing Kubernetes Cluster Packages.
     apt:
       name:
-        - kubeadm=1.23.0-00
-        - kubectl=1.23.0-00
-        - kubelet=1.23.0-00
+        - "kubeadm={{ kube_version }}"
+        - "kubectl={{ kube_version }}"
+        - "kubelet={{ kube_version }}"
       state: present
 
   - name: End the play for all hosts
