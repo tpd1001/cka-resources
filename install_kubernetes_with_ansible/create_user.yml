@@ -38,11 +38,12 @@
         path: "{{ sshkey }}"
       register: sshkey_stat
 
-    - name: Set authorized key for user copying it from current {{ new_user }}  user.
+    - name: Set authorized key for user copying it from current local user to {{ new_user }} user.
       authorized_key:
          user: "{{ new_user }}"
          state: present
-         key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+         key: "{{ sshkey }}"
+      when: sshkey_stat.stat.exists
 
     - name: Print the created user.
       shell: id "{{ new_user }}"
