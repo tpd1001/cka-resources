@@ -458,6 +458,11 @@ kubectl describe pod blue  # check the state field of the initContainer and reas
 
 ## cluster upgrades
 
+```bash
+# componentstatus (cs) is deprecated in v1.19+
+k get cs
+```
+
 [kubeadm upgrade](https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
 
 ```bash
@@ -537,7 +542,7 @@ docker run -i kubesec/kubesec scan - < nginx.yaml
 
 ### authentication
 
-basic, depracated
+basic, deprecated
 
 ```bash
 curl -vk https://master_node_ip:6443/api/v1/pods -u "userid:passwd
@@ -654,16 +659,24 @@ curl -k https://localhost:6443
 k describe -n kube-system po kube-apiserver-controlplane
 ```
 
-### Roles and Role Bindings
-
-What were these bullet points?
+Authorisation Mechanisms
 
 * Node
-* ?BAC
+  * system:node:node01
+* ABAC (Attribute)
+  * need to restart kube-apiserver
+* RBAC (Role)
 * Webhook
-* AlwaysAllow?
-* AlwaysDeny?
-* RBAC
+  * for outsourcing authorisation
+  * e.g. Open Policy Agent
+* AlwaysAllow
+  * kube-apiserver switch `--authorization-mode=AlwaysAllow` by default
+  * comma separatyed list
+* AlwaysDeny
+
+### Roles and Role Bindings
+
+These are namespaced and created within a namespace (if not specified, created in default namespace)
 
 Role yaml
 
@@ -726,8 +739,21 @@ k edit role developer -n blue
 
 ### Cluster Roles and Role Bindings
 
-where do these apply?
-I think they apply to the cluster, rather than namespace.
+These apply to the cluster scoped resources, rather than namespaced resources.
+
+* nodes
+* PV
+* CSR
+* clusterroles
+* clusterrolebindings
+* namespaces
+
+For a list, run:
+
+```bash
+kubectl api-resources --namespaced=true
+kubectl api-resources --namespaced=false
+```
 
 ```bash
 k get roles
@@ -741,19 +767,17 @@ Cluster Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: developer
-  namespace: blue
+  name: cluster-administrator
+  # NB. no namespace:
 rules:
 - apiGroups:  # [""] or ["apps","extensions"] for example
   - ""
-  resourceNames:
-  - blue-app
-  resources:  # ["pods"] or
+  resources:  # ["nodes"] or
   # optional
-  - pods
-  verbs:  # ["get","list"] or
+  - nodes
+  verbs:      # ["get","list"] or
+  - list
   - get
-  - watch
   - create
   - delete
 ```
@@ -764,16 +788,16 @@ Cluster RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: dev-user-binding
-  namespace: blue
+  name: cluster-admin-role-binding
+  # NB. no namespace:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: developer
+  name: cluster-administrator
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: dev-user
+  name: cluster-admin
 ```
 
 ```bash
@@ -782,6 +806,7 @@ k create -f rb.yaml
 ```
 
 Can I?
+
 ```bash
 k auth can-i create pods
 k auth can-i create pods --as dev-user
@@ -789,39 +814,78 @@ k auth can-i create pods --as dev-user
 kubectl edit role developer -n blue
 ```
 
-# === markdownified to here ===
+### serviceaccounts (sa)
 
-# t - what went here?!?!?
+User by machines e.g.
 
-# Cluster Roles and Role Bindings
-kubectl api-resources --namespaced=true
-kubectl api-resources --namespaced=false
+* Prometheus
+* Jenkins
+  * to deploy applications on a cluster
+
+```bash
+kubectl create serviceaccount dashboard-sa
+k get sa
+k describe sa dashboard-sa | grep ^Token
+# token is a secret object. to view it use
+k describe secret $(k describe sa dashboard-sa | awk '/^Token/{print $2}')
+# token is a bearer token
+curl -kv https://x.x.x.x:6443/api \
+ --header "Authorization: Bearer ${token?}"
+```
+
+mount service account token as a volume into pod
+the default sa in each ns is automatically created as a volume mount in all created pods
+mounted at `/var/run/secrets/kubernetes.io/serviceaccount` so you can access it
+
+```yaml
+# inside template>pod spec, NOT dep spec!
+spec:
+  serviceAccountName: dashboard-sa
+  # must delete & recreate pod (deployment handles this)
+  
+  # to prevent automount sa
+  automountServiceAccountToken: false
+```
 
 ### Image Security
+
+```yaml
 image: docker.io/nginx/nginx
 #                      ^^^^^-- image/repository
 #                ^^^^^-------- user/account
 #      ^^^^^^^^^-------------- registry
 image: gcr.io/kubernetes-e2e-test-images/dnsutils
-#
+```
+
+```bash
 docker login private-registry.io
 docker run   private-registry.io/apps/internal-app
-#
+```
+
+creating a registry
+
+```bash
 kubectl create secret docker-registry regcred \
  --docker-server=private-registry.io \
  --docker-username=registry-user \
  --docker-password=password123 \
  --docker-email=registry-user@org.com
+```
 
+```yaml
 spec:
   containers:
   - image: nginx:latest
     name: ignition-nginx
   imagePullSecrets:
   - name: regcred
+```
 
-# Security Contexts
-## security settings & capabilities
+## Security Contexts
+
+security settings & capabilities
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -841,6 +905,7 @@ spec:
       # i.e. docker run --cap-add MAC_ADMIN ubuntu
       capabilities:
         add: ["MAC_ADMIN"]
+```
 
 ## Network Policies
 
@@ -851,35 +916,41 @@ spec:
 docker pull kodekloud/webapp-conntest
 ```
 
-### Ingress is to the pod
-### Egress  is from the pod
-### only looking at direction in which the traffic originated
-### the response is not in scope
+* Ingress is to the pod
+* Egress  is from the pod
+* only looking at direction in which the traffic originated
+* the response is not in scope
 
 in the from: or to: sections,
  each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
  without a hyphen prefix it is a criteria for a rule and they are all AND'd together. ie. must match ALL criteria
-# Docker Storage
-/var/lib/docker
-+aufs
-+containers
-+image
-+volumes
- +data_volume   created here by `docker volume create data_volume`
- +datavolume2   auto-created on the flt is !exist
 
--v       is the old volume mount syntax
- -v /data/mysql:/var/lib/mysql
---mount  is the new volume mount syntax
- --mount type=bind,source=/data/mysql,target=/var/lib/mysql
+## Storage
 
-## Storage Drivers
-# depends on underlying OS
-aufs,zfs,btrfs,Device Mapper, Overlay, Overlay2
+### Docker Storage
 
-# === markdownified below ===
+/var/lib/docker ??? - what is here?
 
-## Persistent Volumes (pv)
+* aufs
+* containers
+* image
+* volumes
+  * data_volume   created here by `docker volume create data_volume`
+  * datavolume2   auto-created on the fly if !exist
+
+```bash
+# -v       is the old volume mount syntax
+-v /data/mysql:/var/lib/mysql
+# --mount  is the new volume mount syntax
+--mount type=bind,source=/data/mysql,target=/var/lib/mysql
+```
+
+### Storage Drivers
+
+depends on underlying OS e.g.
+aufs, zfs, btrfs, Device Mapper, Overlay, Overlay2
+
+### Persistent Volumes (pv)
 
 * [kubernetes-volumes-example-nfs-persistent-volume](https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html)
 
@@ -900,10 +971,10 @@ spec:
 kubectl exec webapp -- cat /log/app.log
 ```
 
-## Persistent Volume Claims (pvc)
+### Persistent Volume Claims (pvc)
 access mode must match the pv
 
-### pod mounts
+#### pod mounts
 NB. Mounts, plural!
 ```yaml
 spec:
@@ -916,19 +987,19 @@ spec:
       mountPath: "/var/www/html"
 ```
 
-## Storge Classes (sc)
+### Storge Classes (sc)
 `k get sc`
-### provisioner
+#### provisioner
 ```bash
 k describe sc ${x?} | grep '"provisioner":'
 k describe sc portworx-io-priority-high |awk -F= '/"provisioner":/{print $2}'|jq '.'
 k describe sc portworx-io-priority-high |awk -F= '/^Annotations/{print $2}'|jq '.'
 ```
-#### no dynamic provisioning
+##### no dynamic provisioning
 ```bash
 k describe sc ${x?} | grep 'no-provision'
 ```
-#### check pvc events
+##### check pvc events
 A pod needs to be created as a consumer or it remains in "pending"
 ```bash
 k describe pvc local-pvc
@@ -1040,7 +1111,7 @@ iptables -t nat -A PREROUTING \
 
 While testing the Network Namespaces, if you come across issues where you can't ping one namespace from the other, make sure you set the NETMASK while setting IP Address. ie: 192.168.1.10/24
 
-```
+```bash
 ip -n red addr add 192.168.1.10/24 dev veth-red
 ```
 
@@ -1157,6 +1228,7 @@ k logs weave-net-... -n kube-system
 ### IPAM
 
 The responsibility of the CNI plugin
+
 * host-local
 * dhcp
 
@@ -1221,7 +1293,7 @@ The GIT Repo for this tutorial can be found here:
 
 ### Resources
 
-The vagrant file used in the next video is available here: 
+The vagrant file used in the next video is available here:
 [certified-kubernetes-administrator-course](https://github.com/kodekloudhub/certified-kubernetes-administrator-course)
 
 Here's the link to the documentation: [install-kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
