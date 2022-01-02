@@ -3,10 +3,13 @@
 - hosts: users
   become: yes
 
+  vars:
+    sshkey: "{{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }}"
+
   vars_prompt:
 
    - name: "new_user"
-     prompt: "Account need to be create in remote server."
+     prompt: "Account need to be create in remote server"
      private: no
 
   tasks:
@@ -29,6 +32,11 @@
         dest: "/etc/sudoers.d/{{ new_user }}"
         line: '{{ new_user }}  ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
+
+    - name: Check local user ssh key exists.
+      stat:
+        path: "{{ sshkey }}"
+      register: sshkey_stat
 
     - name: Set authorized key for user copying it from current {{ new_user }}  user.
       authorized_key:
