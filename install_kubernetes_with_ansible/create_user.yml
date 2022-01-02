@@ -40,9 +40,9 @@
 
     - name: Set authorized key for user copying it from current local user to {{ new_user }} user.
       authorized_key:
-         user: "{{ new_user }}"
-         state: present
-         key: "{{ sshkey }}"
+        user: "{{ new_user }}"
+        state: present
+        key: "{{ sshkey }}"
       when: sshkey_stat.stat.exists
 
     - name: Print the created user.
