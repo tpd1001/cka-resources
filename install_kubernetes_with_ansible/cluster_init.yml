@@ -6,7 +6,7 @@
   become: yes
   become_method: sudo
   become_user: root
-  gather_facts: yes
+  gather_facts: no
   connection: ssh
 
   vars_prompt:
@@ -34,36 +34,35 @@
 
   tasks:
 
-  - name: Resetting kubeadm
-    shell: kubeadm reset -f
-    register: output
+#  - name: Resetting kubeadm
+#    shell: kubeadm reset -f
+#    register: output
 
   - name: Intilizing Kubernetes Cluster
     command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}"  --apiserver-advertise-address "{{ k8s_master_ip }}" --ignore-preflight-errors=NumCPU,Mem
     run_once: true
     delegate_to: "{{ inventory_hostname }}"
     #delegate_to: "{{ k8s_master_ip }}"
+    args:
+      creates: /etc/kubernetes/pki/apiserver.key
 
   - pause: seconds=30
 
-  - name: End the play for all hosts
-    meta: end_play
-
   - name: Create directory for kube config.
-    become_user: ansible
-    become_method: sudo
-    become: yes
+#    become_user: ansible
+#    become_method: sudo
+#    become: yes
     file:
-      path: /home/{{ansible_user }}/.kube
+      path: /home/{{ ansible_user }}/.kube
       state: directory
       owner: "{{ ansible_user }}"
       group: "{{ ansible_user }}"
       mode: 0755
 
-  - name: Copy /etc/kubernetes/admin.conf to user's home directory /home/{{ ansible_user }}/.kube/config.
-    become_user: root
-    become_method: sudo
-    become: yes
+  - name: Copy /etc/kubernetes/admin.conf to user's home directory .kube/config.
+#    become_user: root
+#    become_method: sudo
+#    become: yes
     copy:
       src: /etc/kubernetes/admin.conf
       dest: /home/{{ ansible_user }}/.kube/config
@@ -75,12 +74,15 @@
   - pause: seconds=10
 
   - name: Remove the cache directory.
-    become_user: ansible
-    become_method: sudo
-    become: yes
+#    become_user: ansible
+#    become_method: sudo
+#    become: yes
     file:
       path: /home/{{ ansible_user }}/.kube/cache
       state: absent
+
+  - name: End the play for all hosts
+    meta: end_play
 
   - name: Create Pod Network & RBAC.
     become_user: ansible
