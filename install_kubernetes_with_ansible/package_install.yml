@@ -5,7 +5,7 @@
   become: yes
   become_method: sudo
   become_user: root
-  gather_facts: yes
+  gather_facts: no
   connection: ssh
   vars:
     kube_version: 1.23.0-00
@@ -78,28 +78,6 @@
       owner: root
       group: root
       mode: 0644
-
-  - name: End the play for all hosts
-    meta: end_play
-
-  - name: Update content in docker daemon.json
-    blockinfile:
-      # sed 's/^/        /' /etc/docker/daemon.json
-      path: /etc/docker/daemon.json
-      create: yes
-      owner: root
-      group: root
-      mode: 0644
-      marker: ""
-      block: |
-        {
-          "exec-opts": ["native.cgroupdriver=systemd"],
-          "log-driver": "json-file",
-          "log-opts": {
-            "max-size": "100m"
-          },
-          "storage-driver": "overlay2"
-        }
 
   - name: Enable service docker, and enable persistently
     service:
