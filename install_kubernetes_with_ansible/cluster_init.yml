@@ -9,6 +9,10 @@
   gather_facts: no
   connection: ssh
 
+#  vars:
+#    pod_network_manifest_file: "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+#    #pod_network_manifest_file: "https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+
   vars_prompt:
 
   - name: "pod_network_cidr"
@@ -48,6 +52,14 @@
 
   - pause: seconds=30
 
+#  - name: Generating weave URL
+#    environment:
+#      KUBECONFIG: /etc/kubernetes/admin.conf
+#    shell: |
+#      echo "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+#    register: pod_network_manifest_file  # needs to be .stdout
+#    delegate_to: "{{ inventory_hostname }}"
+
   - name: Create directory for kube config.
 #    become_user: ansible
 #    become_method: sudo
@@ -85,17 +97,13 @@
 #    become_user: ansible
 #    become_method: sudo
 #    become: yes
-#    environment:
-#      http_proxy: wank
-#      https_proxy: wank
-#      no_proxy: 127.0.0.1, localhost, cloud.weave.works
-#      no_proxy: 127.0.0.1, localhost
-      #no_proxy: cloud.weave.works
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
     command: "{{ item }}"
+#    args:
+#      creates: /etc/cni/net.d/10-weave.conflist
     with_items:
-       #- curl -L "{{ pod_network_manifest_file }}"
-       - kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ pod_network_manifest_file }}
-#       - bash -c 'env;kubectl apply -f "{{ pod_network_manifest_file }}"'
+       - kubectl apply -f {{ pod_network_manifest_file }}
 #       - kubectl apply -f {{ rbac_manifest_file }}
 
   - name: End the play for all hosts
