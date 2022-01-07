@@ -63,6 +63,44 @@
         - containerd.io
       state: present
 
+  - name: Create docker directory
+    file:
+      path: /etc/docker
+      state: directory
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: Copy docker daemon.json
+    copy:
+      src: daemon.json
+      dest: /etc/docker/daemon.json
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: End the play for all hosts
+    meta: end_play
+
+  - name: Update content in docker daemon.json
+    blockinfile:
+      # sed 's/^/        /' /etc/docker/daemon.json
+      path: /etc/docker/daemon.json
+      create: yes
+      owner: root
+      group: root
+      mode: 0644
+      marker: ""
+      block: |
+        {
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+            "max-size": "100m"
+          },
+          "storage-driver": "overlay2"
+        }
+
   - name: Enable service docker, and enable persistently
     service:
       name: docker
@@ -88,13 +126,13 @@
         - "kubelet={{ kube_version }}"
       state: present
 
-  - name: End the play for all hosts
-    meta: end_play
-
   - name: Enable service kubelet, and enable persistently
     service:
       name: kubelet
       enabled: yes
+
+  - name: End the play for all hosts
+    meta: end_play
 
   - name: Reboot all the kubernetes nodes.
     reboot:
