@@ -38,7 +38,7 @@
 #    shell: kubeadm reset -f
 #    register: output
 
-  - name: Intilizing Kubernetes Cluster
+  - name: Intializing Kubernetes Cluster
     command: kubeadm init --pod-network-cidr "{{ pod_network_cidr }}"  --apiserver-advertise-address "{{ k8s_master_ip }}" --ignore-preflight-errors=NumCPU,Mem
     run_once: true
     delegate_to: "{{ inventory_hostname }}"
@@ -81,17 +81,25 @@
       path: /home/{{ ansible_user }}/.kube/cache
       state: absent
 
-  - name: End the play for all hosts
-    meta: end_play
-
   - name: Create Pod Network & RBAC.
-    become_user: ansible
-    become_method: sudo
-    become: yes
+#    become_user: ansible
+#    become_method: sudo
+#    become: yes
+#    environment:
+#      http_proxy: wank
+#      https_proxy: wank
+#      no_proxy: 127.0.0.1, localhost, cloud.weave.works
+#      no_proxy: 127.0.0.1, localhost
+      #no_proxy: cloud.weave.works
     command: "{{ item }}"
     with_items:
-       - kubectl apply -f {{ pod_network_manifest_file }}
-       - kubectl apply -f {{ rbac_manifest_file }}
+       #- curl -L "{{ pod_network_manifest_file }}"
+       - kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f {{ pod_network_manifest_file }}
+#       - bash -c 'env;kubectl apply -f "{{ pod_network_manifest_file }}"'
+#       - kubectl apply -f {{ rbac_manifest_file }}
+
+  - name: End the play for all hosts
+    meta: end_play
 
   - pause: seconds=30
 
