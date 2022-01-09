@@ -6,32 +6,35 @@
   become: yes
   become_method: sudo
   become_user: root
-  gather_facts: yes
+  gather_facts: no
   connection: ssh
 
   tasks:
 
+#  - name: Resetting kubeadm
+#    shell: kubeadm reset -f
+#    register: output
+
   - name: Copy join command to worker nodes.
-    become: yes
-    become_method: sudo
-    become_user: root
+#    become: yes
+#    become_method: sudo
+#    become_user: root
     copy:
       src: /tmp/kubernetes_join_command
       dest: /tmp/kubernetes_join_command
       mode: 0777
 
   - name: Join the Worker nodes with the master.
-    become: yes
-    become_method: sudo
-    become_user: root
+#    become: yes
+#    become_method: sudo
+#    become_user: root
     command: sh /tmp/kubernetes_join_command
+    args:
+      creates: /etc/cni/net.d
     register: joined_or_not
 
   - debug:
       msg: "{{ joined_or_not.stdout }}"
-
-  - name: End the play for all hosts
-    meta: end_play
 
 - hosts: masters
   remote_user: ansible
