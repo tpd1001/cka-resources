@@ -1,7 +1,6 @@
 ---
 # ansible-playbook setup_workers.yaml -k -K
-- hosts: qube
-#- hosts: workers
+- hosts: workers
   remote_user: ansible
   become: yes
   become_method: sudo
@@ -35,19 +34,3 @@
 
   - debug:
       msg: "{{ joined_or_not.stdout }}"
-
-- hosts: masters
-  remote_user: ansible
-  become: yes
-  become_method: sudo
-  become_user: root
-  gather_facts: yes
-  connection: ssh
-
-  tasks:
-
-  - name: Configure kubectl command auto-completion.
-    lineinfile:
-      dest: /home/{{ ansible_user }}/.bashrc
-      line: 'source <(kubectl completion bash)'
-      insertafter: EOF
