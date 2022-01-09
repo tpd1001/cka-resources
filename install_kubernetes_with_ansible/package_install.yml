@@ -1,6 +1,6 @@
 ---
 # ansible-playbook package_install.yaml -k -K
-- hosts: "qube"
+- hosts: "masters, workers"
   remote_user: ansible
   become: yes
   become_method: sudo
@@ -55,14 +55,6 @@
       filename: docker
       mode: 0600
 
-  - name: Install Docker Engine.
-    apt:
-      name:
-        - docker-ce
-        - docker-ce-cli
-        - containerd.io
-      state: present
-
   - name: Create docker directory
     file:
       path: /etc/docker
@@ -78,6 +70,14 @@
       owner: root
       group: root
       mode: 0644
+
+  - name: Install Docker Engine.
+    apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+      state: present
 
   - name: Enable service docker, and enable persistently
     service:
