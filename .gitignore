@@ -3,6 +3,8 @@
 *poli*
 # this is for expenses
 booking
+# symlinks
+install_kubernetes_with_ansible/kubernetes-ansible
 # always ignore
 logs
 backup
