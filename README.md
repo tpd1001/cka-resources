@@ -63,6 +63,9 @@ Alpha feature
 
 * Ephemeral containers & [PodSecurity](https://kubernetes.io/docs/concepts/security/pod-security-admission/) move from alpha to beta
 * dual ipv4/ipv6 stack moves to stable/GA
+  * https://www.kubernetes.dev/resources/release/
+  * https://loft.sh/blog/kubernetes-1.23-release/
+  * https://dzone.com/articles/kubernetes-version-123-is-out-everything-you-shoul
 
 ## pods (po)
 ```bash
