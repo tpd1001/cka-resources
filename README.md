@@ -42,6 +42,7 @@ iTerm2 on Mac stuff
 * [VS Code as Markdown Note-Taking App](https://helgeklein.com/blog/vs-code-as-markdown-note-taking-app/)
 * [Languages Supported by Github Flavored Markdown](https://www.rubycoloredglasses.com/2013/04/languages-supported-by-github-flavored-markdown/)
 * [collapsed sections](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-collapsed-sections)
+* [ultimate markdown cheat sheet](https://towardsdatascience.com/the-ultimate-markdown-cheat-sheet-3d3976b31a0)
 
 ### markdownlint
 
@@ -53,7 +54,11 @@ Show VS Code preview pane: Cmd-K,V
 ## What's New
 
 ### 1.22
-
+ 1996  pp test
+ 1997  ika package_install.yml
+ 1998  ika package_install.yml
+ 1999  ggrep -s --exclude-dir logs ansible .
+2:main:SBGML06654:~/OneDrive - Sky Betting and Gaming/____Future/Kubernetes/CKA/install_kubernetes_with_ansible$
 Alpha feature
 
 * [Using Kubernetes Ephemeral Containers for Troubleshooting
@@ -1160,6 +1165,26 @@ bridge add ${id?} /var/run/netns/${id?}
 
 ### Cluster Networking
 
+<details><summary>N.B. CNI and CKA Exam...</summary>
+An important tip about deploying Network Addons in a Kubernetes cluster.
+
+In the upcoming labs, we will work with Network Addons. This includes installing a network plugin in the cluster. While we have used weave-net as an example, please bear in mind that you can use any of the plugins which are described here:
+
+https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model
+
+In the CKA exam, for a question that requires you to deploy a network addon, unless specifically directed, you may use any of the solutions described in the link above.
+
+However, the documentation currently does not contain a direct reference to the exact command to be used to deploy a third party network addon.
+
+The links above redirect to third party/ vendor sites or GitHub repositories which cannot be used in the exam. This has been intentionally done to keep the content in the Kubernetes documentation vendor-neutral.
+
+At this moment in time, there is still one place within the documentation where you can find the exact command to deploy weave network addon:
+
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/#steps-for-the-first-control-plane-node (step 2)
+</details>
+
 * Must have unique:
   * hostname
   * mac
@@ -1237,6 +1262,48 @@ The responsibility of the CNI plugin
 
 weave uses 10.32.0.0/12 by default
 weave assigns a potion (configurable) to each node
+
+### Service Networking
+
+* ClusterIP - only accessible from within the cluster, runs on the cluster
+* NodePort - exposes service via a port on each node to it is accessible from outside the cluster
+
+kube-proxy does this:
+
+* monitors API for new services
+* gets IP from predefined range
+* creates forwarding rules on the cluster (each node?)
+
+kube-proxy can create this ip:port rule in a number of different ways
+
+* userspace
+* ipvs
+* iptables [default]
+
+```bash
+kube-proxy --proxy-mode [userspace|ipvs|iptables] ...
+```
+
+ClusterIPs are allocated from 10.0.0.0/24 by default, often 10.96.0.0/12 is used.
+N.B. must not overlap with PodNetwork, typically 10.244.0.0/16
+
+```bash
+kube-api-server --service-cluster-ip-range CIDR
+```
+
+```bash
+kubectl get svc  # list ClusterIP
+kubectl get svc db-dervice
+iptables -L -t nat | grep db-service
+sudo grep 'new service' /var/log/kube-proxy.log  # location varies
+sudo grep 'new service' /var/log/pods/kube-system_kube-proxy-*/kube-proxy/*.log
+k logs -n kube-system kube-proxy-kxg8g|less
+# if no logs, check process verbosity
+```
+
+## to merge with the end of Networking
+
+https://learnk8s.io/kubernetes-network-packets
 
 ## Design a Kubernetes Cluster
 
