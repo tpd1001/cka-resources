@@ -39,12 +39,11 @@ Qs 20-
 ```bash
 k get -n critical-space deploy,svc,po,cm,ing  # Q21
 k describe -n app-space deploy webapp-food  # Q17
-#k edit -n app-space ingress  # search for /backend, 7yyP , change /wear to /eat, change wear-service to food-service
 kubectl get svc -n critical-space
 vim i && k apply -f i
 ```
 
-Solution
+Q22 Solution
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -52,6 +51,9 @@ kind: Ingress
 metadata:
   name: ingress-critical
   namespace: critical-space
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
   - http:
