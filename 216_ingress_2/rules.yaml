@@ -16,13 +16,13 @@ spec:
         pathType: Prefix
         backend:
           service:
-           name: wear-service
-           port: 
-            number: 8080
+            name: wear-service
+            port:
+              number: 8080
       - path: /watch
         pathType: Prefix
         backend:
           service:
-           name: video-service
-           port:
-            number: 8080
+            name: video-service
+            port:
+              number: 8080
