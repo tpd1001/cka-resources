@@ -25,11 +25,16 @@ kubectl expose -n ingress-space deployment ingress-controller --type=NodePort --
 # -OR-
 kubectl expose -n ingress-space deployment ingress-controller \
 --type=NodePort --port=80 --name=ingress \
---dry-run=client -o yaml \
-sed '/creation/{;d;b;};/^metadata:/{;h;s/.*/  namespace: ingress-space/;x;p;g;}' \
+--dry-run=client -o yaml | \
 sed '
  /creation/{;d;b;};
  /^metadata:/{;h;s/.*/  namespace: ingress-space/;x;p;g;};
  /target/{;h;s/target/node/;s/[0-9][0-9]*/30080/;x;p;g;}
-' > ingress.yaml
+' | kubectl apply -f -
+```
+
+Q8 Solution
+
+```yaml
+see rules.yaml
 ```
