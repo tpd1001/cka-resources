@@ -1,4 +1,6 @@
-apiVersion: extensions/v1beta1
+---
+# differences between API v1beta1 and API v1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-wear-watch
@@ -7,10 +9,16 @@ spec:
     - http:
         paths:
         - path: /wear
+          pathType: Prefix
           backend:
-            serviceName: wear-service
-            servicePort: 80
+            service:
+              name: wear-service
+              port:
+                number: 80
         - path: /watch
+          pathType: Prefix
           backend:
-            serviceName: watch-service
-            servicePort: 80
+            service:
+              name: watch-service
+              port:
+                number: 80
