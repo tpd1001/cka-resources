@@ -110,21 +110,13 @@ kubectl run httpd --image=httpd:alpine --port=80 --expose
 kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml
 ```
 
-PODS.template (work in progress) - see the repo for the latest version
-
-```text
-NAME                        IMAGE                   READY   STATUS    RESTARTS   AGE     IP            NODE
-metadata.name               spec.containers[].image tbc     status.phase   status.containerStatuses[].restartCount          tbc     status.podIP    spec.nodeName
-```
-
-Commands using [PODS.template] (work in progress) - see the repo for the latest version
+Commands using [PODS.template](PODS.template) (work in progress)
 
 ```bash
 kubectl get po -o jsonpath="{.items[*].spec.containers[*].image}"
 kubectl get po -o custom-columns-file=PODS.template
 vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
 watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
-
 ```
 
 ## replicasets (rs)
