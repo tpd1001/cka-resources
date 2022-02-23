@@ -27,6 +27,16 @@ vim configuration for yaml
 # vim: set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 ```
 
+ansible
+
+```bash
+ 1996  pp test
+ 1997  ika package_install.yml
+ 1998  ika package_install.yml
+ 1999  ggrep -s --exclude-dir logs ansible .
+2:main:SBGML06654:~/OD/____Future/Kubernetes/CKA/install_kubernetes_with_ansible$
+```
+
 ## Markdown and Mac stuff
 
 <!-- markdownlint-disable MD022 MD031 MD033 -->
@@ -58,12 +68,8 @@ Show VS Code preview pane: Cmd-K,V
 In the many months I've been studying in my spare time, there have been some new Kubernetes releases.
 
 ### 1.22
- 1996  pp test
- 1997  ika package_install.yml
- 1998  ika package_install.yml
- 1999  ggrep -s --exclude-dir logs ansible .
-2:main:SBGML06654:~/OneDrive - Sky Betting and Gaming/____Future/Kubernetes/CKA/install_kubernetes_with_ansible$
-Alpha feature
+
+Alpha feature (may now be GA)
 
 * [Using Kubernetes Ephemeral Containers for Troubleshooting
 ](https://loft.sh/blog/using-kubernetes-ephemeral-containers-for-troubleshooting/)
@@ -102,15 +108,27 @@ kubectl run custom-nginx --image=nginx --port=8080
 kubectl run httpd --image=httpd:alpine --port=80 --expose
 
 kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml
+```
 
-  905  kubectl get po -o custom-columns-file=PODS.template
-  906  k get po -o jsonpath="{.items[*].spec.containers[*].image}"
-  907  vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
-  908  watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
+PODS.template (work in progress) - see the repo for the latest version
+
+```text
+NAME                        IMAGE                   READY   STATUS    RESTARTS   AGE     IP            NODE
+metadata.name               spec.containers[].image tbc     status.phase   status.containerStatuses[].restartCount          tbc     status.podIP    spec.nodeName
+```
+
+Commands using [PODS.template] (work in progress) - see the repo for the latest version
+
+```bash
+kubectl get po -o jsonpath="{.items[*].spec.containers[*].image}"
+kubectl get po -o custom-columns-file=PODS.template
+vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
+watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
+
 ```
 
 ## replicasets (rs)
-```bash
+```text
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
 kubectl scale replicaset new-replica-set --replicas=5
 kubectl edit replicaset new-replica-set
