@@ -55,7 +55,7 @@ Show VS Code preview pane: Cmd-K,V
 
 ## What's New
 
-https://iximiuz.com/en/posts/kubernetes-api-go-types-and-common-machinery/
+In the many months I've been studying in my spare time, there have been some new Kubernetes releases.
 
 ### 1.22
  1996  pp test
@@ -72,9 +72,23 @@ Alpha feature
 
 * Ephemeral containers & [PodSecurity](https://kubernetes.io/docs/concepts/security/pod-security-admission/) move from alpha to beta
 * dual ipv4/ipv6 stack moves to stable/GA
-  * https://www.kubernetes.dev/resources/release/
-  * https://loft.sh/blog/kubernetes-1.23-release/
-  * https://dzone.com/articles/kubernetes-version-123-is-out-everything-you-shoul
+  * [Kubernetes 1.23 Release - loft.sh](https://loft.sh/blog/kubernetes-1.23-release/)
+  * [Kubernetes Version 1.23 Is Out: Everything You Should Know](https://dzone.com/articles/kubernetes-version-123-is-out-everything-you-shoul)
+
+### 1.24
+
+* [Kubernetes 1.24 Release Information - kubernetes.dev](https://www.kubernetes.dev/resources/release/)
+
+### GoLang
+
+Kubernetes is built on Go.
+
+<details><summary>Some interesting background reading...</summary>
+
+* [How To Call Kubernetes API using Go - Types and Common Machinery](https://iximiuz.com/en/posts/kubernetes-api-go-types-and-common-machinery/) - annoyingly, this domain has gone away but I snaffled the HTML from Google's cache.
+* more to come perhaps...
+
+</details>
 
 ## pods (po)
 ```bash
@@ -1175,9 +1189,9 @@ An important tip about deploying Network Addons in a Kubernetes cluster.
 
 In the upcoming labs, we will work with Network Addons. This includes installing a network plugin in the cluster. While we have used weave-net as an example, please bear in mind that you can use any of the plugins which are described here:
 
-https://kubernetes.io/docs/concepts/cluster-administration/addons/
+[Installing Addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/)
 
-https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model
+[Cluster Networking](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model)
 
 In the CKA exam, for a question that requires you to deploy a network addon, unless specifically directed, you may use any of the solutions described in the link above.
 
@@ -1187,7 +1201,7 @@ The links above redirect to third party/ vendor sites or GitHub repositories whi
 
 At this moment in time, there is still one place within the documentation where you can find the exact command to deploy weave network addon:
 
-https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/#steps-for-the-first-control-plane-node (step 2)
+[Stacked control plane and etcd nodes](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/#steps-for-the-first-control-plane-node) (step 2)
 </details>
 
 * Must have unique:
@@ -1459,8 +1473,8 @@ If you are still interested to learn this, please check out the complete tutoria
 
 ## Troubleshooting
 
-https://twitter.com/manekinekko/status/1434808198532370432
-https://learnk8s.io/troubleshooting-deployments
+* [twitter link](https://twitter.com/manekinekko/status/1434808198532370432)
+* [troubleshooting deployments](https://learnk8s.io/troubleshooting-deployments)
 
 ### Application Failure
 
@@ -1664,10 +1678,6 @@ ot2md() {
 
 </details>
 
-```
-tbc
-```
-
 * [Living with Kubernetes: Cluster Upgrades – The New Stack](https://thenewstack.io/living-with-kubernetes-cluster-upgrades/)
 * [GitHub - cncf/curriculum: Open Source Curriculum for CNCF Certification Courses](https://github.com/cncf/curriculum)
 * [Linux Foundation Certification Exams: Candidate Handbook - T&C DOC](https://docs.linuxfoundation.org/tc-docs/certification/lf-candidate-handbook)
@@ -1695,7 +1705,8 @@ tbc
 * [How do I access a private Docker registry with a self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/how-do-i-access-a-private-docker-registry-with-a-self-signed-certificate-using-k)
 * [Chaos Mesh - Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
 
-
 ### end
 
-https://news.ycombinator.com/item?id=28244246
+Not Kubernetes but I put these here for some reason:
+
+[Another free CA as an alternative to Let's Encrypt (scotthelme.co.uk)](https://news.ycombinator.com/item?id=28244246) - SSL certs, might be useful for Ingress stuff.
