@@ -53,6 +53,8 @@ Show VS Code preview pane: Cmd-K,V
 
 ## What's New
 
+https://iximiuz.com/en/posts/kubernetes-api-go-types-and-common-machinery/
+
 ### 1.22
  1996  pp test
  1997  ika package_install.yml
@@ -634,6 +636,7 @@ kubectl get nodes \
 kubectl config view
 kubectl config view --kubeconfig=my-custom-config
 kubectl config use-context prod-user@production
+kubectl config set-context --current --namespace=alpha
 kubectl config -h
 
 k config --kubeconfig=my-kube-config current-context
@@ -850,7 +853,7 @@ mounted at `/var/run/secrets/kubernetes.io/serviceaccount` so you can access it
 spec:
   serviceAccountName: dashboard-sa
   # must delete & recreate pod (deployment handles this)
-  
+
   # to prevent automount sa
   automountServiceAccountToken: false
 ```
@@ -1301,9 +1304,81 @@ k logs -n kube-system kube-proxy-kxg8g|less
 # if no logs, check process verbosity
 ```
 
-## to merge with the end of Networking
+## DNS in Kubernetes
 
-https://learnk8s.io/kubernetes-network-packets
+Services
+
+* when service created, kube dns record is created, can use service name, within same namespace e.g. web-service
+* when in a different namespace, append the namespace as a domain e.g. web-service.apps
+* all recoreds of a type e.g. services are grouped together in a subdomain, svc e.g. web-service.apps.svc
+* all services & pods are in a root domain, cluster.local by default e.g. web-service.apps.svc.cluster.local
+
+Pods
+
+* Pods dns not created by default but can be enabled
+* ip has dots substituted by dashes e.g. 10-244-2-5
+* namespace as before, or default
+* type is pod e.g. 10-244-2-5.apps.pods.cluster.local
+
+## CoreDNS in Kubernetes
+
+`/etc/coredns/Corefile`
+
+* kubernetes plugin in Corefile is where the TLD for the cluster is set e.g. cluster.local
+* `pods insecure` enables creation of DNS records for pods
+* Corefile is passed in as a ConfigMap `kubectl get cm -n kube-system coredns -o yaml`
+
+For pods, their resolv.conf is configured with the Service registered by coredns `kubectl get svc -n kube-system kube-dns` which is done by the kubelet
+
+search domains are only possible for services; pods must use fqdns
+
+```bash
+  ns=kube-system
+k logs ${ns:+-n $ns} $(
+  kubectl get po -A -l k8s-app=kube-dns -o name|head -1)
+```
+
+## Ingress (ing)
+
+* Ingress Controller
+  * nginix
+  * GCE
+  * Contour
+  * haproxy
+  * traefik
+  * istio
+* Ingress Resources
+
+* to split by url
+  * one rule, two paths
+* to split by host
+  * two rules, one path
+
+```bash
+kubectl describe ingress foo
+```
+
+Now, in k8s version 1.20+ we can create an Ingress resource from the imperative way like this:-
+
+```bash
+# kubectl create ingress <ingress-name> --rule="host/path=service:port"
+kubectl create ingress ingress-test --rule="wear.my-online-store.com/wear*=wear-service:80"
+```
+
+Find more information and examples in the below reference link:-
+
+* [kubectl ingress commands](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-ingress-em-)
+
+References:-
+
+* [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress)
+* [path-types](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
+
+fish
+
+## to merge with the end of Networking or Troubleshooting
+
+[merge](https://learnk8s.io/kubernetes-network-packets)
 
 ## Design a Kubernetes Cluster
 
@@ -1368,4 +1443,257 @@ The vagrant file used in the next video is available here:
 
 Here's the link to the documentation: [install-kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
 
+### Important Update: End to End Section
+
+<details><summary>Expand...</summary>
+
+As per the CKA exam changes (effective September 2020), End to End tests is no longer part of the exam and hence it has been removed from the course.
+
+If you are still interested to learn this, please check out the complete tutorial and demos in our YouTube playlist:
+
+[tutorial and demos](https://www.youtube.com/watch?v=-ovJrIIED88&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo&index=18)
+
+</details>
+
+## Troubleshooting
+
+https://twitter.com/manekinekko/status/1434808198532370432
+https://learnk8s.io/troubleshooting-deployments
+
+### Application Failure
+
+Draw map of entire stack
+
+* DB pod
+* DB svc
+* Web pod
+* Web svc
+
+Check top down client>web>db
+Check service first
+Check selectors and labels
+
+```bash
+k describe svc web-svc  # grep for Selector:
+k describe pod web-pod  # check matches in metadata>labels
+```
+
+Check pod is running ok
+
+```bash
+k get po
+k describe po web
+k logs web -f
+k logs web -f --previous
+```
+
+Repeat for DB svc then pod
+
+Further troubleshooting tips in kubernetes doc [Troubleshooting Applications](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application/)
+
+### Controlplane Failure
+
+Check status of nodes
+
+```bash
+k get no
+k get po
+
+k get po -n kube-system
+# if deployed as services
+service kube-apiserver status
+service kube-controller-manager status
+service kube-scheduler status
+service kubelet status
+service kube-proxy status
+
+k logs kube-apiserver-master -n kube-system
+# if deployed as services
+sudo journalctl -u kube-apiserver
+```
+
+Further troubleshooting tips in kubernetes doc [Troubleshooting Clusters](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-cluster/)
+
+### Worker Node Failure
+
+Check syayus of nodes
+
+```bash
+k get no  # look for NotReady
+k describe no node01
+# if status Unknown, comms lost with master, possible node failure
+# then check LastHeartbeatTime for when it happened
+# if crashed, bring it back up
+top    # check for CPU/Mem issues
+df -h  # check for disk issues
+service kubelet status     # check kubelet status
+sudo journalctl -u kublet  # check kubelet logs
+openssl x509 -text -in /var/lib/kubelet/worker-1.crt  # check certs
+# check certs are not expired and have been issues by correct CA
+# Subject: ... O = system:nodes
+```
+
+### Network Failure
+
+tbc
+
+### JSON PATH
+
+[JSON PATH](https://githib.com/json-path/JsonPath) Documentation
+
+Always start with a $ to represent the root element (dict with no name).
+
+```json
+$[1]            # the 2nd item an a root list/array
+$.fruit         # the dict named fruit
+$.fruit.colour  # the dict in a dict
+```
+
+Results are returned in an array i.e. square brackets
+
+To limit the output, use a criteria
+
+```json
+?()     # denotes the check if inside the list
+@       # represents each item in the list
+@ > 40  # items greter than 40
+@ == 40
+@ != 40
+@ in [40,41,42]
+@ nin [40,41,42]
+$.car.wheels[?(@.location == "rear-right")].model
+```
+
+Wildcards
+
+```json
+$.*.price            # price of all cars
+$[*].model           # model of all cars in array/list
+$.*.wheels[*].model  # model of all wheels of all models
+```
+
+```json
+# literal
+$.prizes[5].laureates[2]
+# better but overly verbose
+$.prizes[?(@.year == "2014")].laureates[?(@.firstname == "Malala")]
+# optimal
+$.prizes[*].laureates[?(@.firstname == "Malala")]
+```
+
+Lists
+
+```json
+$[0:3]    # start:end get first 4 elements, NOT including the 4th
+$[0:4]    # get first 4 elements, INCLUDING the 4th
+$[0:8:2]  # in increments of 2
+$[-1]     # the last item in list. not in ALL implementations
+$[-1:0]   # this works to get the last element
+$[-1:]    # you can leave out the 0
+£[-3:0]   # last three elements
+```
+
+JSON PATH in kubectl
+
+```json
+s
+```
+
+## Monitoring
+
+Not part of CKA but interesting.
+
+* [Kubernetes Health Checks Using Probes](https://thenewstack.io/kubernetes-health-checks-using-probes/)
+
+## Other Resources
+
+These are interesting articles I found on t'Internet:
+
+Deployments | Kubernetes
+Managing Resources | Kubernetes
+ReplicaSet | Kubernetes
+
+These are generated from a OneTab export with
+
+<details><summary>ot2md()</summary>
+
+```bash
+ot2md() {
+ # OneTab to Markdown converter
+ # converts a range of lines from a OneTab export
+ # into a bullet point Markdown format and puts them on the Mac clipboard
+ # Usage: ot2md <start_string> <end_string>
+ local f=export5
+ sed -n "
+  /$1/,/$2/{
+   # remove whitespace from pipe separator
+   s/ | /|/
+   # title fixups
+   s/ - Stack Overflow//
+   s/ . Opensource.com//
+   s/ . Appvia.io//
+   s/ . Code-sparks//
+   s/ . The New Stack//
+   s/ - T&C DOC//
+   s/ - General Discussions.*//
+   s/ . GitHub//
+   s/ . by .* Medium//
+   s/ . by .* ITNEXT//
+   # special one-time fixups
+   s/: .Open/: Open/g
+   s/.best practice./\"best practice\"/g
+   # replace strange unicode delimiter chars with hyphens
+   s/ . / - /g
+#wip
+   p
+  }
+ " $f | \
+ awk -F\| '
+  {
+   # remove trailing spaces from link title or you get markdown lint warnings
+   sub(/ $/,"",$2)
+   # title fixups
+   sub(/kubernetes - /,"",$2)
+   printf("* [%s](%s)\n",$2,$1)
+  }
+ ' | tee >(pbcopy)
+}
+```
+
+</details>
+
+```
+tbc
+```
+
+* [Living with Kubernetes: Cluster Upgrades – The New Stack](https://thenewstack.io/living-with-kubernetes-cluster-upgrades/)
+* [GitHub - cncf/curriculum: Open Source Curriculum for CNCF Certification Courses](https://github.com/cncf/curriculum)
+* [Linux Foundation Certification Exams: Candidate Handbook - T&C DOC](https://docs.linuxfoundation.org/tc-docs/certification/lf-candidate-handbook)
+* [Important Instructions: CKA and CKAD - T&C DOC](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
+* [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+* [Tutorial: Deploy Your First Kubernetes Cluster](https://www.appvia.io/blog/tutorial-deploy-kubernetes-cluster)
+* [Kubernetes Tutorial - Step by Step Guide to Basic Kubernetes Concepts](https://auth0.com/blog/kubernetes-tutorial-step-by-step-introduction-to-basic-concepts/)
+* [MetalLB config](https://metallb.universe.tf/configuration/)
+* [MetalLB troubleshooting](https://metallb.universe.tf/configuration/troubleshooting/)
+* [Load Balancer Services Always Show EXTERNAL-IP Pending - General Discussions - Discuss Kubernetes](https://discuss.kubernetes.io/t/load-balancer-services-always-show-external-ip-pending/10009/2)
+* [Kubernetes and MetalLB: LoadBalancer for On-Prem Deployments](https://starkandwayne.com/blog/k8s-and-metallb-a-loadbalancer-for-on-prem-deployments/)
+* [kubernetes - Metallb LoadBalancer is stuck on pending](https://stackoverflow.com/questions/66124430/metallb-loadbalancer-is-stuck-on-pending)
+* [external-ip status is pending · Issue #673 · metallb/metallb · GitHub](https://github.com/metallb/metallb/issues/673)
+* [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+* [kubernetes - "pkg/mod/k8s.io/client-go@v0.18.5/tools/cache/reflector.go:125: Failed to list *v1.Service: Unauthorized"](https://stackoverflow.com/questions/66329284/pkg-mod-k8s-io-client-gov0-18-5-tools-cache-reflector-go125-failed-to-list)
+* [Troubleshooting - NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/troubleshooting/)
+* [The worst so-called “best practice” for Docker](https://pythonspeed.com/articles/security-updates-in-docker/)
+* [Working with kubernetes configmaps, part 2: Watchers](https://itnext.io/working-with-kubernetes-configmaps-part-2-watchers-b6dd0e583d71)
+* [Kubernetes at home - Bringing the pilot to dinner » Code-sparks](https://darienmt.com/kubernetes/2019/03/31/kubernetes-at-home.html)
+* [Dirty Kubeconfig? Clean it up!. TL/DR I made a plugin to clean up your…](https://medium.com/@ashleyschuett/dirty-kubeconfig-clean-it-up-65cc56c372a6)
+* [kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)
+* [kube-dns ContainerCreating /run/flannel/subnet.env no such file · Issue #36575 · kubernetes/kubernetes · GitHub](https://github.com/kubernetes/kubernetes/issues/36575)
+* [pod cidr not assgned · Issue #728 · flannel-io/flannel](https://github.com/flannel-io/flannel/issues/728)
+* [kubernetes - Kube-Flannel cant get CIDR although PodCIDR available on node](https://stackoverflow.com/questions/50833616/kube-flannel-cant-get-cidr-although-podcidr-available-on-node)
+* [How do I access a private Docker registry with a self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/how-do-i-access-a-private-docker-registry-with-a-self-signed-certificate-using-k)
+* [Chaos Mesh - Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
+
+
 ### end
+
+https://news.ycombinator.com/item?id=28244246
