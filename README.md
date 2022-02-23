@@ -1,4 +1,6 @@
-# Title Will Go Here
+# Certified Kubernetes Administrator Revision Notes
+
+These are my revision notes for my CKA exam. Hope someone finds them useful.
 
 ## setup
 
