@@ -1,5 +1,8 @@
 # Network Troubleshooting
 
+This is lifted directly from the Udemy course (242. Nertwork Troubleshooting) as this did not contain a video.
+I converted into markdown for my revision.
+
 ## Network Plugin in kubernetes
 
 Kubernetes uses CNI plugins to setup network. The kubelet is responsible for executing plugins as we mention the following parameters in kubelet configuration.
