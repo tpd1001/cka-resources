@@ -119,6 +119,24 @@ vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
 watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
 ```
 
+### pods for speed, in the exam
+
+Reference (Bookmark this page for exam. It will be very handy):
+
+https://kubernetes.io/docs/reference/kubectl/conventions/
+
+Create an NGINX Pod
+
+```bash
+kubectl run nginx --image=nginx
+```
+
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
+
+```bash
+kubectl run nginx --image=nginx --dry-run=client -o yaml
+```
+
 ## replicasets (rs)
 ```text
 kubectl create replicaset foo-rs --image=httpd:2.4-alpine --replicas=2
@@ -133,6 +151,28 @@ k create deployment webapp --image=kodekloud/webapp-color --replicas=3
 k create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
 k set image deployment nginx nginx=nginx:1.18
 kubectl get all
+```
+
+### deploy for speed, in the exam
+
+Create a deployment
+
+```bash
+kubectl create deployment --image=nginx nginx
+```
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
+
+```bash
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+```
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Replicas (--replicas=4)
+
+In k8s version 1.19+, we can specify the --replicas option to create a deployment with 4 replicas.
+
+```bash
+kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml
 ```
 
 ## services (svc)
@@ -413,9 +453,11 @@ data:
       name: app-config
 ```
 
-## secrets
+## secrets (secret)
 
 * [encrypt-data](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+* Read about the [protections](https://kubernetes.io/docs/concepts/configuration/secret/#protections) and [risks](https://kubernetes.io/docs/concepts/configuration/secret/#risks) of using secrets [here](https://kubernetes.io/docs/concepts/configuration/secret/#risks)
+* There are other better ways of handling sensitive data like passwords in Kubernetes, such as using tools like Helm Secrets, [HashiCorp Vault](https://www.vaultproject.io/).
 
 ```bash
 kubectl create secret generic app-secret --from-literal=DB_PASSWD=green \
@@ -444,7 +486,7 @@ use as env var with
 ```yaml
     image: foo
     envFrom:
-      secretRef:
+    - secretRef:
       name: app-config
 ```
 
@@ -566,6 +608,12 @@ service kube-apiserver stop
 ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
  --data-dir /new/data/dir
 ```
+
+### cluster maintenance references
+
+* [backing-up-an-etcd-cluster](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster)
+* [etcd recovery](https://github.com/etcd-io/website/blob/main/content/en/docs/v3.5/op-guide/recovery.md)
+* [Disaster Recovery for your Kubernetes Clusters](https://www.youtube.com/watch?v=qRPNuT080Hk)
 
 ## security
 
