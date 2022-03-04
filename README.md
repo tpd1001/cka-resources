@@ -1045,6 +1045,10 @@ and look for events
 
 The example Storage Class called `local-storage` makes use of `VolumeBindingMode` set to `WaitForFirstConsumer`. This will delay the binding and provisioning of a PersistentVolume until a Pod using the PersistentVolumeClaim is created.
 
+## Additional Storage Topics
+
+Additional topics such as StatefulSets are out of scope for the exam. However, if you wish to learn them, they are covered in the  Certified Kubernetes Application Developer (CKAD) course.
+
 ## Networking
 
 ### Prerequisites
@@ -1443,6 +1447,63 @@ etcdctl get name
 etcdctl get / --prefix --keys-only
 ```
 
+### ETCD Commands
+
+Maybe not part of CKA - tbc...
+
+<details><summary>ETCDCTL is the CLI tool used to interact with ETCD.</summary>
+
+ETCDCTL can interact with ETCD Server using 2 API versions - Version 2 and Version 3.  By default its set to use Version 2. Each version has different sets of commands.
+
+For example ETCDCTL version 2 supports the following commands:
+
+```bash
+etcdctl backup
+etcdctl cluster-health
+etcdctl mk
+etcdctl mkdir
+etcdctl set
+```
+
+Whereas the commands are different in version 3
+
+```bash
+etcdctl snapshot save
+etcdctl endpoint health
+etcdctl get
+etcdctl put
+```
+
+To set the right version of API set the environment variable ETCDCTL_API command
+
+```bash
+export ETCDCTL_API=3
+```
+
+When API version is not set, it is assumed to be set to version 2. And version 3 commands listed above don't work. When API version is set to version 3, version 2 commands listed above don't work.
+
+Apart from that, you must also specify path to certificate files so that ETCDCTL can authenticate to the ETCD API Server. The certificate files are available in the etcd-master at the following path. We discuss more about certificates in the security section of this course. So don't worry if this looks complex:
+
+```bash
+--cacert /etc/kubernetes/pki/etcd/ca.crt
+--cert /etc/kubernetes/pki/etcd/server.crt
+--key /etc/kubernetes/pki/etcd/server.key
+```
+
+So for the commands I showed in the previous video to work you must specify the ETCDCTL API version and path to certificate files. Below is the final form:
+
+```bash
+# reformatted from one-liner for readability
+kubectl exec etcd-master -n kube-system -- sh -c "
+ ETCDCTL_API=3 etcdctl get / --prefix --keys-only --limit=10 \
+ --cacert /etc/kubernetes/pki/etcd/ca.crt \
+ --cert /etc/kubernetes/pki/etcd/server.crt \
+ --key /etc/kubernetes/pki/etcd/server.key
+"
+```
+
+</details>
+
 #### Important Update: Kubernetes the Hard Way
 
 Installing Kubernetes the hard way can help you gain a better understanding of putting together the different components manually.
@@ -1565,7 +1626,7 @@ tbc
 
 ### JSON PATH
 
-[JSON PATH](https://githib.com/json-path/JsonPath) Documentation
+<details><summary>Basics</summary>
 
 Always start with a $ to represent the root element (dict with no name).
 
@@ -1616,13 +1677,44 @@ $[0:8:2]  # in increments of 2
 $[-1]     # the last item in list. not in ALL implementations
 $[-1:0]   # this works to get the last element
 $[-1:]    # you can leave out the 0
-£[-3:0]   # last three elements
+$[-3:0]   # last three elements
 ```
+
+</details>
+
+[JSON PATH](https://githib.com/json-path/JsonPath) Documentation
 
 JSON PATH in kubectl
 
-```json
-s
+```bash
+# develop a JSONPATH query and replace "HERE" between the braces
+kubectl get no -o jsonpath='{HERE}'
+# example JSON PATH for a pod json
+echo '$.status.containerStatuses[?(@.name=="redis-container")].restartCount'
+# $ is not mandatory, kubectl adds it
+kubectl get no -o jsonpath='
+{.items[*].metadata.name}
+{.items[*].status.nodeInfo.architecture}
+{.items[*].status.capacity.cpu}'
+# can use \n and \t etc.
+kubectl get no -o jsonpath='{.items[*].metadata.name}{"\n"}{.items[*].status.capacity.cpu}{"\n"}'
+# with ranges for pretty output
+kubectl get no -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.capacity.cpu}{"\n"}{end}'
+# using custom columns
+kubectl get no -o custom-columns=NAME:{.metadata.name},CPU:.status.capacity.cpu
+# sorting
+kubectl get no --sort-by=.status.capacity.cpu
+```
+
+My Homegrown Examples (before I understood JSON PATH)
+
+```bash
+# get the Pod CIDR
+kubectl get nodes -o jsonpath='{.items[*].spec.podCIDR}'
+# get images for the running pods
+kubectl get po -o jsonpath="{.items[*].spec.containers[*].image}"
+# get names & images for pods
+kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
 ```
 
 ## Monitoring
@@ -1633,11 +1725,11 @@ Not part of CKA but interesting.
 
 ## Other Resources
 
-These are interesting articles I found on t'Internet:
+Also not pard of CKA but these are interesting articles I found on t'Internet:
 
-Deployments | Kubernetes
-Managing Resources | Kubernetes
-ReplicaSet | Kubernetes
+* [Network Service Mash](https://networkservicemesh.io/docs/concepts/architecture/)
+* [clusterapi](https://cluster-api.sigs.k8s.io/)
+  * [Cluster API v1alpha3](https://kubernetes.io/blog/2020/04/21/cluster-api-v1alpha3-delivers-new-features-and-an-improved-user-experience/) original blog post
 
 These are generated from a OneTab export with
 
