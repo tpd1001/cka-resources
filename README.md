@@ -599,6 +599,11 @@ kubectl get all --all-namespaces -o yaml \
  > all-deploy-services.yaml
 ETCDCTL_API=3 etcdctl snapshot save snapshot.db
 ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+
+crt=$(kubectl describe -n kube-system po etcd-controlplane|awk -F= '/--cert-file/{print $2}')
+ca=$( kubectl describe -n kube-system po etcd-controlplane|awk -F= '/--trusted-ca-file/{print $2}')
+key=$(kubectl describe -n kube-system po etcd-controlplane|awk -F= '/--key-file/{print $2}')
+ETCDCTL_API=3 etcdctl --cacert=${ca?} --cert=${crt?} --key=${key?} snapshot save /opt/snapshot-pre-boot.db
 ```
 
 ### restore
@@ -607,6 +612,8 @@ ETCDCTL_API=3 etcdctl snapshot status snapshot.db
 service kube-apiserver stop
 ETCDCTL_API=3 etcdctl snapshot restore snapshot.db \
  --data-dir /new/data/dir
+# !!CARE!! edit data-dir to point to restore location in volumes section
+vim /etc/kubernetes/manifests/etcd.yaml
 ```
 
 ### cluster maintenance references
