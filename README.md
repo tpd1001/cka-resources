@@ -9,6 +9,8 @@ alias k=kubectl
 #k() { kubectl $@; }
 source <(kubectl completion bash|sed '/ *complete .*kubectl$/{;h;s/kubectl$/k/p;g;}')
 v() { vim -c ":set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab" ${1?} && kubectl apply -f $1; }
+# replace all "k" with "kubectl" for notes portability
+#gsed -i 's/^\([#(]\)*k /\1kubectl /g;s/k get/kubectl get/g;s/k apply/kubectl apply/g;s/k desc/kubectl desc/g' README.md;gif README.md
 ```
 
 consider these:
@@ -98,12 +100,12 @@ Kubernetes is built on Go.
 
 ## pods (po)
 ```bash
-k run redis -n finance --image=redis
-k run nginx-pod --image=nginx:alpine
-k run redis --image=redis:alpine --labels='tier=db,foo=bar'
+kubectl run redis -n finance --image=redis
+kubectl run nginx-pod --image=nginx:alpine
+kubectl run redis --image=redis:alpine --labels='tier=db,foo=bar'
 
-#k run custom-nginx --image=nginx
-#k expose pod custom-nginx --port=8080
+#kubectl run custom-nginx --image=nginx
+#kubectl expose pod custom-nginx --port=8080
 kubectl run custom-nginx --image=nginx --port=8080
 kubectl run httpd --image=httpd:alpine --port=80 --expose
 
@@ -147,9 +149,9 @@ kubectl edit replicaset new-replica-set
 ## deployments (deploy)
 ```bash
 kubectl create deployment httpd-frontend --image=httpd:2.4-alpine --replicas=2
-k create deployment webapp --image=kodekloud/webapp-color --replicas=3
-k create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
-k set image deployment nginx nginx=nginx:1.18
+kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3
+kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
+kubectl set image deployment nginx nginx=nginx:1.18
 kubectl get all
 ```
 
@@ -177,31 +179,31 @@ kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o y
 
 ## services (svc)
 ```bash
-k create svc clusterip redis-service --tcp=6379:6379  # worked in practice test but should use expose
-k expose pod redis --name=redis-service --port=6379
+kubectl create svc clusterip redis-service --tcp=6379:6379  # worked in practice test but should use expose
+kubectl expose pod redis --name=redis-service --port=6379
 ```
 
 ## namespaces (ns)
 ```bash
-k create ns dev-ns
-k create deployment redis-deploy -n dev-ns --image=redis --replicas=2
+kubectl create ns dev-ns
+kubectl create deployment redis-deploy -n dev-ns --image=redis --replicas=2
 ```
 
 ## common verbs/ations
 
 ### describe
 ```bash
-k describe $(k get po -o name|head -1)
+kubectl describe $(kubectl get po -o name|head -1)
 ```
 
 ### replace
 ```bash
-k replace -f nginx.yaml
+kubectl replace -f nginx.yaml
 ```
 
 ### delete
 ```bash
-k delete $(k get po -o name)
+kubectl delete $(kubectl get po -o name)
 ```
 
 ### generate manifest
@@ -214,12 +216,12 @@ kubectl run nginx --image=nginx --dry-run=client -o yaml
 labels in spec>selector and spec>template must match
 
 ```bash
-k get po --selector app=foo
-k get po --selector env=dev|grep -vc NAME
-k get all --selector env=prod|egrep -vc '^$|NAME'
-k get all --selector env=prod|grep -c ^[a-z]
-k get all --selector env=prod --no-headers|wc -l
-k get all --selector env=prod,bu=finance,tier=frontend --no-headers
+kubectl get po --selector app=foo
+kubectl get po --selector env=dev|grep -vc NAME
+kubectl get all --selector env=prod|egrep -vc '^$|NAME'
+kubectl get all --selector env=prod|grep -c ^[a-z]
+kubectl get all --selector env=prod --no-headers|wc -l
+kubectl get all --selector env=prod,bu=finance,tier=frontend --no-headers
 ```
 
 ## taints and tolerations
@@ -233,23 +235,23 @@ taint-effect is what happens to pods that do not tolerate the taint
 ### permit master to run pods
 
 ```bash
-k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
 # prevent master from running pods again (defaut)
-k taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
+kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
 ```
 
 ### other taints
 
 ```bash
-k taint nodes node1 key=value:taint-effect
-k taint nodes node1 app=blue:NoSchedule
-k taint nodes node1 app=blue:NoSchedule-  # to remove
+kubectl taint nodes node1 key=value:taint-effect
+kubectl taint nodes node1 app=blue:NoSchedule
+kubectl taint nodes node1 app=blue:NoSchedule-  # to remove
 
 #spec>tolerations>- key: "app" (all in quotes)
-k describe node kubemaster | grep Taint
+kubectl describe node kubemaster | grep Taint
 
-#k get po bee -o yaml | sed '/tolerations:/a\  - key: spray\n    value: mortein\n    effect: NoSchedule\n    operator: Equal'|k apply -f -
-k get po bee -o yaml | sed '/tolerations:/a\  - effect: NoSchedule\n    key: spray\n    operator: Equal\n    value: mortein'|k apply -f -
+#kubectl get po bee -o yaml | sed '/tolerations:/a\  - key: spray\n    value: mortein\n    effect: NoSchedule\n    operator: Equal'|kubectl apply -f -
+kubectl get po bee -o yaml | sed '/tolerations:/a\  - effect: NoSchedule\n    key: spray\n    operator: Equal\n    value: mortein'|kubectl apply -f -
 ```
 
 ## node selectors
@@ -258,7 +260,7 @@ k get po bee -o yaml | sed '/tolerations:/a\  - effect: NoSchedule\n    key: spr
 * spec:>nodeSelector:>size:Large
 
 ```bash
-k label nodes node1 size=Large
+kubectl label nodes node1 size=Large
 ```
 
 ## node affinity
@@ -297,25 +299,25 @@ k label nodes node1 size=Large
 ## resources
 
 ```bash
-k describe po elephant | grep Reason
-k describe po elephant | sed -n '/Last State/{;N;p}'
+kubectl describe po elephant | grep Reason
+kubectl describe po elephant | sed -n '/Last State/{;N;p}'
 ```
 
 ## daemonsets
 
 ```bash
-k get ds -A
-k get ds -n kube-system kube-flannel-ds
-k describe ds kube-flannel-ds|grep Image
-k get ds kube-flannel-ds -o yaml
-k create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d' > d.yaml
-k create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' > ds.yaml
+kubectl get ds -A
+kubectl get ds -n kube-system kube-flannel-ds
+kubectl describe ds kube-flannel-ds|grep Image
+kubectl get ds kube-flannel-ds -o yaml
+kubectl create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d' > d.yaml
+kubectl create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' > ds.yaml
 kubectl create -f ds.yaml
 ```
 
 ## static pods
 
-* as an option in kublet.service (systemd)
+* as an option in kubelet.service (systemd)
 * or as a --config switch to a file containing the staticPodPath opt
 
 ```bash
@@ -325,7 +327,7 @@ sudo grep staticPodPath $(ps -wwwaux | \
 
 ls .*  # dummy command to close italics
 
-k run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
+kubectl run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
  egrep -v 'creationTimestamp:|resources:|status:|Policy:' \
  >static-pod-nginx.yaml
 ```
@@ -343,10 +345,10 @@ k run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
 5. update port in probes to the same as above
 
 ```bash
-k create -f my-scheduler.yaml  # not as a static pod
+kubectl create -f my-scheduler.yaml  # not as a static pod
 echo -e '    schedulerName: my-scheduler' >> pod.yaml
-k create -f pod.yaml
-k get events
+kubectl create -f pod.yaml
+kubectl get events
 ```
 
 ## monitoring
@@ -355,9 +357,9 @@ k get events
 
 ```bash
 git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
-k create -f kubernetes-metrics-server
-k top node
-k top pod
+kubectl create -f kubernetes-metrics-server
+kubectl top node
+kubectl top pod
 ```
 
 ## application lifecycle
@@ -366,13 +368,13 @@ k top pod
 * Recreate      - all destroyed in one go and then all recreated
 
 ```bash
-k set image deployment/myapp nginx=nginx:1.9.1
+kubectl set image deployment/myapp nginx=nginx:1.9.1
 #                            ^^^^^-The name of the container inside the pod
-k edit deployment/myapp
-k annotate deployment/myapp kubernetes.io/change-cause="foo"  # replace deprecated --record
-k rollout status deployment/myapp
-k rollout history deployment/myapp
-k rollout undo deployment/myapp
+kubectl edit deployment/myapp
+kubectl annotate deployment/myapp kubernetes.io/change-cause="foo"  # replace deprecated --record
+kubectl rollout status deployment/myapp
+kubectl rollout history deployment/myapp
+kubectl rollout undo deployment/myapp
 kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].image
 ```
 
@@ -538,7 +540,7 @@ kubectl describe pod blue  # check the state field of the initContainer and reas
 
 ```bash
 # componentstatus (cs) is deprecated in v1.19+
-k get cs
+kubectl get cs
 ```
 
 [kubeadm upgrade](https://v1-20.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
@@ -643,8 +645,8 @@ curl -vk https://master_node_ip:6443/api/v1/pods --header "Authorization: Bearer
 view certificates
 
 ```bash
-k get po kube-apiserver-controlplane -o yaml -n kube-system|grep cert
-k get po etcd-controlplane -o yaml -n kube-system|grep cert
+kubectl get po kube-apiserver-controlplane -o yaml -n kube-system|grep cert
+kubectl get po etcd-controlplane -o yaml -n kube-system|grep cert
 openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt
 openssl x509 -text -noout -in /etc/kubernetes/pki/etcd/server.crti|grep CN  # etcd
 openssl x509 -text -noout -in /etc/kubernetes/pki/apiserver.crt|grep Not    # validity
@@ -720,8 +722,8 @@ kubectl config use-context prod-user@production
 kubectl config set-context --current --namespace=alpha
 kubectl config -h
 
-k config --kubeconfig=my-kube-config current-context
-k config --kubeconfig=my-kube-config use-context research
+kubectl config --kubeconfig=my-kube-config current-context
+kubectl config --kubeconfig=my-kube-config use-context research
 ```
 
 ```yaml
@@ -748,7 +750,7 @@ curl -k https://localhost:6443
 ## Authorisation
 
 ```bash
-k describe -n kube-system po kube-apiserver-controlplane
+kubectl describe -n kube-system po kube-apiserver-controlplane
 ```
 
 Authorisation Mechanisms
@@ -811,22 +813,22 @@ kubectl create -f devuser-developer-binding.yaml
 ```
 
 ```bash
-k get roles
-k get rolebindings
-k describe role developer
-k describe rolebinding devuser-developer-rolebinding
+kubectl get roles
+kubectl get rolebindings
+kubectl describe role developer
+kubectl describe rolebinding devuser-developer-rolebinding
 ```
 
 Can I?
 
 ```bash
-k auth can-i create deployments
-k auth can-i delete nodes
-k auth can-i create deployments --as dev-user
-k auth can-i create pods        --as dev-user
-k auth can-i create pods        --as dev-user --namespace test
+kubectl auth can-i create deployments
+kubectl auth can-i delete nodes
+kubectl auth can-i create deployments --as dev-user
+kubectl auth can-i create pods        --as dev-user
+kubectl auth can-i create pods        --as dev-user --namespace test
 # can edit in-place
-k edit role developer -n blue
+kubectl edit role developer -n blue
 ```
 
 ### Cluster Roles and Role Bindings
@@ -848,9 +850,9 @@ kubectl api-resources --namespaced=false
 ```
 
 ```bash
-k get roles
-k get roles -n kube-system -o yaml
-k get role -n blue developer -o yaml
+kubectl get roles
+kubectl get roles -n kube-system -o yaml
+kubectl get role -n blue developer -o yaml
 ```
 
 Cluster Role
@@ -893,15 +895,15 @@ subjects:
 ```
 
 ```bash
-k get rolebinding -n blue dev-user-binding -o yaml
-k create -f rb.yaml
+kubectl get rolebinding -n blue dev-user-binding -o yaml
+kubectl create -f rb.yaml
 ```
 
 Can I?
 
 ```bash
-k auth can-i create pods
-k auth can-i create pods --as dev-user
+kubectl auth can-i create pods
+kubectl auth can-i create pods --as dev-user
 # don't need to delete & recreate - can edit in-place
 kubectl edit role developer -n blue
 ```
@@ -916,10 +918,10 @@ User by machines e.g.
 
 ```bash
 kubectl create serviceaccount dashboard-sa
-k get sa
-k describe sa dashboard-sa | grep ^Token
+kubectl get sa
+kubectl describe sa dashboard-sa | grep ^Token
 # token is a secret object. to view it use
-k describe secret $(k describe sa dashboard-sa | awk '/^Token/{print $2}')
+kubectl describe secret $(kubectl describe sa dashboard-sa | awk '/^Token/{print $2}')
 # token is a bearer token
 curl -kv https://x.x.x.x:6443/api \
  --header "Authorization: Bearer ${token?}"
@@ -1080,21 +1082,21 @@ spec:
 ```
 
 ### Storge Classes (sc)
-`k get sc`
+`kubectl get sc`
 #### provisioner
 ```bash
-k describe sc ${x?} | grep '"provisioner":'
-k describe sc portworx-io-priority-high |awk -F= '/"provisioner":/{print $2}'|jq '.'
-k describe sc portworx-io-priority-high |awk -F= '/^Annotations/{print $2}'|jq '.'
+kubectl describe sc ${x?} | grep '"provisioner":'
+kubectl describe sc portworx-io-priority-high |awk -F= '/"provisioner":/{print $2}'|jq '.'
+kubectl describe sc portworx-io-priority-high |awk -F= '/^Annotations/{print $2}'|jq '.'
 ```
 ##### no dynamic provisioning
 ```bash
-k describe sc ${x?} | grep 'no-provision'
+kubectl describe sc ${x?} | grep 'no-provision'
 ```
 ##### check pvc events
 A pod needs to be created as a consumer or it remains in "pending"
 ```bash
-k describe pvc local-pvc
+kubectl describe pvc local-pvc
 ```
 and look for events
 
@@ -1336,9 +1338,9 @@ can be deployed ad daemons on node os
 or as daemonset (ideally)
 
 ```bash
-k apply -f "...url..."
-k get po -n kube-system
-k logs weave-net-... -n kube-system
+kubectl apply -f "...url..."
+kubectl get po -n kube-system
+kubectl logs weave-net-... -n kube-system
 ```
 
 ### IPAM
@@ -1385,7 +1387,7 @@ kubectl get svc db-dervice
 iptables -L -t nat | grep db-service
 sudo grep 'new service' /var/log/kube-proxy.log  # location varies
 sudo grep 'new service' /var/log/pods/kube-system_kube-proxy-*/kube-proxy/*.log
-k logs -n kube-system kube-proxy-kxg8g|less
+kubectl logs -n kube-system kube-proxy-kxg8g|less
 # if no logs, check process verbosity
 ```
 
@@ -1419,7 +1421,7 @@ search domains are only possible for services; pods must use fqdns
 
 ```bash
   ns=kube-system
-k logs ${ns:+-n $ns} $(
+kubectl logs ${ns:+-n $ns} $(
   kubectl get po -A -l k8s-app=kube-dns -o name|head -1)
 ```
 
@@ -1616,17 +1618,17 @@ Check service first
 Check selectors and labels
 
 ```bash
-k describe svc web-svc  # grep for Selector:
-k describe pod web-pod  # check matches in metadata>labels
+kubectl describe svc web-svc  # grep for Selector:
+kubectl describe pod web-pod  # check matches in metadata>labels
 ```
 
 Check pod is running ok
 
 ```bash
-k get po
-k describe po web
-k logs web -f
-k logs web -f --previous
+kubectl get po
+kubectl describe po web
+kubectl logs web -f
+kubectl logs web -f --previous
 ```
 
 Repeat for DB svc then pod
@@ -1638,10 +1640,10 @@ Further troubleshooting tips in kubernetes doc [Troubleshooting Applications](ht
 Check status of nodes
 
 ```bash
-k get no
-k get po
+kubectl get no
+kubectl get po
 
-k get po -n kube-system
+kubectl get po -n kube-system
 # if deployed as services
 service kube-apiserver status
 service kube-controller-manager status
@@ -1649,7 +1651,7 @@ service kube-scheduler status
 service kubelet status
 service kube-proxy status
 
-k logs kube-apiserver-master -n kube-system
+kubectl logs kube-apiserver-master -n kube-system
 # if deployed as services
 sudo journalctl -u kube-apiserver
 ```
@@ -1661,15 +1663,15 @@ Further troubleshooting tips in kubernetes doc [Troubleshooting Clusters](https:
 Check syayus of nodes
 
 ```bash
-k get no  # look for NotReady
-k describe no node01
+kubectl get no  # look for NotReady
+kubectl describe no node01
 # if status Unknown, comms lost with master, possible node failure
 # then check LastHeartbeatTime for when it happened
 # if crashed, bring it back up
 top    # check for CPU/Mem issues
 df -h  # check for disk issues
 service kubelet status     # check kubelet status
-sudo journalctl -u kublet  # check kubelet logs
+sudo journalctl -u kubelet  # check kubelet logs
 openssl x509 -text -in /var/lib/kubelet/worker-1.crt  # check certs
 # check certs are not expired and have been issues by correct CA
 # Subject: ... O = system:nodes
