@@ -14,27 +14,15 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 Q2 Solution
 
 ```bash
-k get no
-k describe no node01  # NotReady
-ssh node01 "top -bn1"
-ssh node01 "df -h"|grep -v '/var/lib/docker'
-ssh node01 "service kubelet status"|grep Active:  # activating
-ssh node01 "journalctl -u kubelet"|grep unable    # cert
-# journalctl -u kubelet -f
-ssh node01 "grep -r WRONG /var/lib/kubelet/"
-ssh node01 "sed -i 's/WRONG.*/ca.crt/' /var/lib/kubelet/config.yaml"
-```
-
-Q3 Solution
-
-```bash
-k get no
-k describe no node01  # NotReady
-ssh node01 "top -bn1"
-ssh node01 "df -h"|grep -v '/var/lib/docker'
-ssh node01 "service kubelet status"|grep Active:  # activating
-ssh node01 "journalctl -u kubelet"|grep unable    # cert
-# journalctl -u kubelet -f
-ssh node01 "grep -r WRONG /var/lib/kubelet/"
-ssh node01 "sed -i 's/WRONG.*/ca.crt/' /var/lib/kubelet/config.yaml"
+# still not resolved
+alias k=kubectl
+k get po -n triton -w
+k get po -n triton -w &
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+k describe -n kube-system kube-proxy-stthp
+k describe -n kube-system po kube-proxy-stthp
+k logs -n kube-system po kube-proxy-stthp
+k logs -n kube-system pod/kube-proxy-stthp
+cd /var/lib/kube-proxy/
+k get -n kube-system po kube-proxy-stthp -o yaml
 ```
