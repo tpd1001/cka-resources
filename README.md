@@ -1461,11 +1461,14 @@ References:-
 * [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress)
 * [path-types](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
 
-fish
-
 ## to merge with the end of Networking or Troubleshooting
 
 [merge](https://learnk8s.io/kubernetes-network-packets)
+
+### MetalLB
+
+* [usage](https://metallb.universe.tf/usage/)
+* [METALLB IN LAYER 2 MODE](https://metallb.universe.tf/concepts/layer2/)
 
 ## Design a Kubernetes Cluster
 
@@ -1782,11 +1785,14 @@ Not part of CKA but interesting.
 
 ## Other Resources
 
-Also not pard of CKA but these are interesting articles I found on t'Internet:
+Also not part of CKA but these are interesting articles I found on t'Internet:
 
+* [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way)
 * [Network Service Mash](https://networkservicemesh.io/docs/concepts/architecture/)
 * [clusterapi](https://cluster-api.sigs.k8s.io/)
+  * [Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start.html)
   * [Cluster API v1alpha3](https://kubernetes.io/blog/2020/04/21/cluster-api-v1alpha3-delivers-new-features-and-an-improved-user-experience/) original blog post
+* [kubespray now supports kube-vip](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/kube-vip.md)
 
 These are generated from a OneTab export with
 
@@ -1837,32 +1843,37 @@ ot2md() {
 
 </details>
 
-* [Living with Kubernetes: Cluster Upgrades – The New Stack](https://thenewstack.io/living-with-kubernetes-cluster-upgrades/)
+* [Living with Kubernetes: Cluster Upgrades](https://thenewstack.io/living-with-kubernetes-cluster-upgrades/)
 * [GitHub - cncf/curriculum: Open Source Curriculum for CNCF Certification Courses](https://github.com/cncf/curriculum)
-* [Linux Foundation Certification Exams: Candidate Handbook - T&C DOC](https://docs.linuxfoundation.org/tc-docs/certification/lf-candidate-handbook)
-* [Important Instructions: CKA and CKAD - T&C DOC](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
+* [Linux Foundation Certification Exams: Candidate Handbook](https://docs.linuxfoundation.org/tc-docs/certification/lf-candidate-handbook)
+* [Important Instructions: CKA and CKAD](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
 * [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
 * [Tutorial: Deploy Your First Kubernetes Cluster](https://www.appvia.io/blog/tutorial-deploy-kubernetes-cluster)
 * [Kubernetes Tutorial - Step by Step Guide to Basic Kubernetes Concepts](https://auth0.com/blog/kubernetes-tutorial-step-by-step-introduction-to-basic-concepts/)
-* [MetalLB config](https://metallb.universe.tf/configuration/)
-* [MetalLB troubleshooting](https://metallb.universe.tf/configuration/troubleshooting/)
-* [Load Balancer Services Always Show EXTERNAL-IP Pending - General Discussions - Discuss Kubernetes](https://discuss.kubernetes.io/t/load-balancer-services-always-show-external-ip-pending/10009/2)
+* [MetalLB](https://metallb.universe.tf/configuration/)
+* [MetalLB](https://metallb.universe.tf/configuration/troubleshooting/)
+* [Load Balancer Services Always Show EXTERNAL-IP Pending](https://discuss.kubernetes.io/t/load-balancer-services-always-show-external-ip-pending/10009/2)
 * [Kubernetes and MetalLB: LoadBalancer for On-Prem Deployments](https://starkandwayne.com/blog/k8s-and-metallb-a-loadbalancer-for-on-prem-deployments/)
-* [kubernetes - Metallb LoadBalancer is stuck on pending](https://stackoverflow.com/questions/66124430/metallb-loadbalancer-is-stuck-on-pending)
-* [external-ip status is pending · Issue #673 · metallb/metallb · GitHub](https://github.com/metallb/metallb/issues/673)
+* [Metallb LoadBalancer is stuck on pending](https://stackoverflow.com/questions/66124430/metallb-loadbalancer-is-stuck-on-pending)
+* [external-ip status is pending - Issue #673 - metallb/metallb](https://github.com/metallb/metallb/issues/673)
 * [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
-* [kubernetes - "pkg/mod/k8s.io/client-go@v0.18.5/tools/cache/reflector.go:125: Failed to list *v1.Service: Unauthorized"](https://stackoverflow.com/questions/66329284/pkg-mod-k8s-io-client-gov0-18-5-tools-cache-reflector-go125-failed-to-list)
+* ["pkg/mod/k8s.io/client-go@v0.18.5/tools/cache/reflector.go:125: Failed to list *v1.Service: Unauthorized"](https://stackoverflow.com/questions/66329284/pkg-mod-k8s-io-client-gov0-18-5-tools-cache-reflector-go125-failed-to-list)
 * [Troubleshooting - NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/troubleshooting/)
-* [The worst so-called “best practice” for Docker](https://pythonspeed.com/articles/security-updates-in-docker/)
+* [The worst so-called "best practice" for Docker](https://pythonspeed.com/articles/security-updates-in-docker/)
 * [Working with kubernetes configmaps, part 2: Watchers](https://itnext.io/working-with-kubernetes-configmaps-part-2-watchers-b6dd0e583d71)
-* [Kubernetes at home - Bringing the pilot to dinner » Code-sparks](https://darienmt.com/kubernetes/2019/03/31/kubernetes-at-home.html)
-* [Dirty Kubeconfig? Clean it up!. TL/DR I made a plugin to clean up your…](https://medium.com/@ashleyschuett/dirty-kubeconfig-clean-it-up-65cc56c372a6)
+* [Kubernetes at home - Bringing the pilot to dinner](https://darienmt.com/kubernetes/2019/03/31/kubernetes-at-home.html)
+* [Dirty Kubeconfig? Clean it up!](https://medium.com/@ashleyschuett/dirty-kubeconfig-clean-it-up-65cc56c372a6)
 * [kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)
-* [kube-dns ContainerCreating /run/flannel/subnet.env no such file · Issue #36575 · kubernetes/kubernetes · GitHub](https://github.com/kubernetes/kubernetes/issues/36575)
-* [pod cidr not assgned · Issue #728 · flannel-io/flannel](https://github.com/flannel-io/flannel/issues/728)
-* [kubernetes - Kube-Flannel cant get CIDR although PodCIDR available on node](https://stackoverflow.com/questions/50833616/kube-flannel-cant-get-cidr-although-podcidr-available-on-node)
-* [How do I access a private Docker registry with a self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/how-do-i-access-a-private-docker-registry-with-a-self-signed-certificate-using-k)
-* [Chaos Mesh - Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
+* [kube-dns ContainerCreating /run/flannel/subnet.env no such file - Issue #36575](https://github.com/kubernetes/kubernetes/issues/36575)
+* [pod cidr not assgned - Issue #728](https://github.com/flannel-io/flannel/issues/728)
+* [Kube-Flannel cant get CIDR although PodCIDR available on node](https://stackoverflow.com/questions/50833616/kube-flannel-cant-get-cidr-although-podcidr-available-on-node)
+* [How do - access - private Docker registry with - self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/howIdoaiaaccess-a-private-docker-registry-with-a-self-signed-certificate-using-k)
+* [Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
+
+### Weaknesses
+
+* kubectl expose
+* k run httpd --image=httpd:alpine --port=80 --expose
 
 ### end
 
