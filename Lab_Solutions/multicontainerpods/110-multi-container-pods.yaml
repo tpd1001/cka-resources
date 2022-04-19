@@ -4,7 +4,6 @@ kind: Pod
 metadata:
   name: mcp1
 spec:
-spec:
   containers:
   - name: mcp1-nginx
     image: nginx:1.20
