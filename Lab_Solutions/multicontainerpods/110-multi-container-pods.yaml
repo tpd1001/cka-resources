@@ -9,3 +9,6 @@ spec:
     image: nginx:1.20
   - name: mcp1-logagent
     image: sematext/logagent:3.0.55
+    env:
+    - name: LOGS_TOKEN
+      value: foo
