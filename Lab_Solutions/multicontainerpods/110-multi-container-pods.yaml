@@ -7,8 +7,22 @@ spec:
   containers:
   - name: mcp1-nginx
     image: nginx:1.20
+    resources:
+      limits:
+        memory: 200Mi
+        cpu: 200m
+      requests:
+        memory: 128Mi
+        cpu: 100m
   - name: mcp1-logagent
     image: sematext/logagent:3.0.55
     env:
     - name: LOGS_TOKEN
       value: foo
+    resources:
+      limits:
+        memory: 200Mi
+        cpu: 200m
+      requests:
+        memory: 128Mi
+        cpu: 100m
