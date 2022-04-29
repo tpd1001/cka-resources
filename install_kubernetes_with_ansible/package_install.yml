@@ -21,7 +21,7 @@
       register: swapoff
       changed_when: '"CHANGED" in swapoff.stdout'
 
-    - name: Remove Swap entry from /etc/fstab.
+    - name: Remove Swap entry from /etc/fstab
       lineinfile:
         dest: /etc/fstab
         regexp: swap
@@ -71,7 +71,7 @@
         group: root
         mode: 0644
 
-    - name: Install Docker Engine.
+    - name: Install Docker Engine
       apt:
         name:
           - docker-ce
@@ -96,7 +96,7 @@
         filename: kubernetes
         mode: 0600
 
-    - name: Installing Kubernetes Cluster Packages.
+    - name: Installing Kubernetes Cluster Packages
       apt:
         name:
           - "kubeadm={{ kube_version }}"
@@ -112,7 +112,7 @@
     - name: End the play for all hosts
       meta: end_play
 
-    - name: Reboot all the kubernetes nodes.
+    - name: Reboot all the kubernetes nodes
       reboot:
         post_reboot_delay: 10
         reboot_timeout: 40
