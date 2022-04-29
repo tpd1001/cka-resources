@@ -8,9 +8,9 @@
 
   vars_prompt:
 
-   - name: "new_user"
-     prompt: "Account need to be create in remote server"
-     private: no
+    - name: "new_user"
+      prompt: "Account need to be create in remote server"
+      private: no
 
   tasks:
     - name: creating the user {{ new_user }}.
@@ -51,4 +51,3 @@
 
     - debug:
         msg: "{{ new_user_created.stdout_lines[0] }}"
-

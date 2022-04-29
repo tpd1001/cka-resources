@@ -104,8 +104,8 @@
 #    args:
 #      creates: /etc/cni/net.d/10-weave.conflist
     with_items:
-       - kubectl apply -f {{ pod_network_manifest_file }}
-#       - kubectl apply -f {{ rbac_manifest_file }}
+      - kubectl apply -f {{ pod_network_manifest_file }}
+#      - kubectl apply -f {{ rbac_manifest_file }}
 
   - pause: seconds=30
 
