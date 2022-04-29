@@ -57,6 +57,7 @@ iTerm2 on Mac stuff
 * [Languages Supported by Github Flavored Markdown](https://www.rubycoloredglasses.com/2013/04/languages-supported-by-github-flavored-markdown/)
 * [collapsed sections](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-collapsed-sections)
 * [ultimate markdown cheat sheet](https://towardsdatascience.com/the-ultimate-markdown-cheat-sheet-3d3976b31a0)
+* [About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes)
 
 ### markdownlint
 
@@ -125,7 +126,7 @@ watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.templa
 
 Reference (Bookmark this page for exam. It will be very handy):
 
-https://kubernetes.io/docs/reference/kubectl/conventions/
+[conventions](https://kubernetes.io/docs/reference/kubectl/conventions/)
 
 Create an NGINX Pod
 
@@ -137,6 +138,11 @@ Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
 
 ```bash
 kubectl run nginx --image=nginx --dry-run=client -o yaml
+```
+
+```bash
+kubectl get po ${ns:+-n $ns} -l app=primary-01 -o name --field-selector=status.phase=Running
+kubectl get po ${ns:+-n $ns} -l app=primary-01 -o name --field-selector=status.phase!=Running
 ```
 
 ## replicasets (rs)
@@ -153,6 +159,24 @@ kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3
 kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3 -o yaml --dry-run=client | sed '/strategy:/d;/status:/d' > pink.yaml
 kubectl set image deployment nginx nginx=nginx:1.18
 kubectl get all
+```
+
+### limits
+
+Should always specify requests and limits in a resources section for each container in a pod.
+
+```yaml
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    resources:
+      limits:
+        memory: 200Mi
+        cpu: 200m
+      requests:
+        memory: 128Mi
+        cpu: 100m
 ```
 
 ### deploy for speed, in the exam
@@ -211,6 +235,23 @@ kubectl delete $(kubectl get po -o name)
 kubectl run nginx --image=nginx --dry-run=client -o yaml
 ```
 
+## scheduling
+
+Manual scheduling, add `nodeName` property in pod spec
+
+```yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: node01
+  containers:
+  -  image: nginx
+     name: nginx
+```
+
 ## labels and selectors
 
 labels in spec>selector and spec>template must match
@@ -232,7 +273,15 @@ taint-effect is what happens to pods that do not tolerate the taint
 * PreferNoSchedule
 * NoExecute
 
+use `kubectl describe node NODE` to list taints
+
+## affinity
+
+[Schedule a Pod using required node affinity](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/)
+
 ### permit master to run pods
+
+use a `-` suffix to the effect to remove it
 
 ```bash
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
@@ -1794,7 +1843,7 @@ Also not part of CKA but these are interesting articles I found on t'Internet:
   * [Cluster API v1alpha3](https://kubernetes.io/blog/2020/04/21/cluster-api-v1alpha3-delivers-new-features-and-an-improved-user-experience/) original blog post
 * [kubespray now supports kube-vip](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/kube-vip.md)
 
-These are generated from a OneTab export with
+These below are generated from a OneTab export with
 
 <details><summary>ot2md()</summary>
 
@@ -1806,7 +1855,7 @@ ot2md() {
  # Usage: ot2md <start_string> <end_string>
  local f=export5
  sed -n "
-  /$1/,/$2/{
+  /${1?}/,/${2?}/{
    # remove whitespace from pipe separator
    s/ | /|/
    # title fixups
@@ -1818,14 +1867,18 @@ ot2md() {
    s/ - T&C DOC//
    s/ - General Discussions.*//
    s/ . GitHub//
+   s/ . Kubernetes//
+   s| . kubernetes/kubernetes||
+   s| . flannel-io/flannel||
    s/ . by .* Medium//
    s/ . by .* ITNEXT//
    # special one-time fixups
    s/: .Open/: Open/g
    s/.best practice./\"best practice\"/g
+   s/, bare metal load-balancer for Kubernetes//
+   s|\. TL/DR . made . plugin to clean up your.||g
    # replace strange unicode delimiter chars with hyphens
-   s/ . / - /g
-#wip
+   / [IiAa] /!s/ . / - /g
    p
   }
  " $f | \
@@ -1850,8 +1903,8 @@ ot2md() {
 * [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
 * [Tutorial: Deploy Your First Kubernetes Cluster](https://www.appvia.io/blog/tutorial-deploy-kubernetes-cluster)
 * [Kubernetes Tutorial - Step by Step Guide to Basic Kubernetes Concepts](https://auth0.com/blog/kubernetes-tutorial-step-by-step-introduction-to-basic-concepts/)
-* [MetalLB](https://metallb.universe.tf/configuration/)
-* [MetalLB](https://metallb.universe.tf/configuration/troubleshooting/)
+* [MetalLB configuration](https://metallb.universe.tf/configuration/)
+* [MetalLB troubleshooting](https://metallb.universe.tf/configuration/troubleshooting/)
 * [Load Balancer Services Always Show EXTERNAL-IP Pending](https://discuss.kubernetes.io/t/load-balancer-services-always-show-external-ip-pending/10009/2)
 * [Kubernetes and MetalLB: LoadBalancer for On-Prem Deployments](https://starkandwayne.com/blog/k8s-and-metallb-a-loadbalancer-for-on-prem-deployments/)
 * [Metallb LoadBalancer is stuck on pending](https://stackoverflow.com/questions/66124430/metallb-loadbalancer-is-stuck-on-pending)
@@ -1867,13 +1920,35 @@ ot2md() {
 * [kube-dns ContainerCreating /run/flannel/subnet.env no such file - Issue #36575](https://github.com/kubernetes/kubernetes/issues/36575)
 * [pod cidr not assgned - Issue #728](https://github.com/flannel-io/flannel/issues/728)
 * [Kube-Flannel cant get CIDR although PodCIDR available on node](https://stackoverflow.com/questions/50833616/kube-flannel-cant-get-cidr-although-podcidr-available-on-node)
-* [How do - access - private Docker registry with - self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/howIdoaiaaccess-a-private-docker-registry-with-a-self-signed-certificate-using-k)
+* [How do I access a private Docker registry with a self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/howIdoaiaaccess-a-private-docker-registry-with-a-self-signed-certificate-using-k)
 * [Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
+
+And more OneTab exports
+
+* [Implementing Chaos Engineering in K8s: Chaos Mesh Principle Analysis and Control Plane Development](https://en.pingcap.com/blog/implementing-chaos-engineering-in-k8s-chaos-mesh-principle-analysis-and-control-plane-development/)
+* [Siloscape: The Dark Side of Kubernetes - Container Journal](https://containerjournal-com.cdn.ampproject.org/v/s/containerjournal.com/features/siloscape-the-dark-side-of-kubernetes/amp/?amp_gsa=1&amp_js_v=a6&usqp=mq331AQIKAGwASCAAgM%3D#amp_tf=From+%251%24s&aoh=16341240802898&csi=0&ampshare=https%3A%2F%2Fcontainerjournal.com%2Feditorial-calendar%2Fbest-of-2021%2Fsiloscape-the-dark-side-of-kubernetes%2F)
+* [Single Sign-On SSH With Zero Key Management](https://smallstep.com/sso-ssh/)
+* [Easy Monitoring of Container Status - Log](https://boatswain.io/)
+* [Kubernetes at home - Bringing the pilot to dinner](https://darienmt.com/kubernetes/2019/03/31/kubernetes-at-home.html)
+* [Kubernetes Volumes Guide - Examples for NFS and Persistent Volume Book](https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-volumes-example-nfs-persistent-volume.html)
+* [Building Docker Images The Proper Way](https://itnext.io/building-docker-images-the-proper-way-3c9807524582)
+* [matchbox/deployment.md at master - poseidon/matchbox](https://github.com/poseidon/matchbox/blob/master/docs/deployment.md)
+* [Kubernetes Proceeding with Deprecation of Dockershim in Upcoming 1.24 Release](https://www.infoq.com/news/2022/01/kubernetes-dockershim-removal/)
+* [Kubernetes Nodes - The Complete Guide](https://komodor.com/learn/kubernetes-nodes-complete-guide/)
+* [Kubernetes ConfigMap Configuration and Reload Strategy](https://medium.com/swlh/kubernetes-configmap-confuguration-and-reload-strategy-9f8a286f3a44)
+* [Restart pods when configmap updates in Kubernetes?](https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes)
+* [Chart Development Tips and Tricks](https://helm.sh/docs/howto/charts_tips_and_tricks/#automatically-roll-deployments)
+* [kustomize/configGeneration.md at 12d1771bb349e1523bc546e314da63c684a7faf2 - kubernetes-sigs/kustomize](https://github.com/kubernetes-sigs/kustomize/blob/12d1771bb349e1523bc546e314da63c684a7faf2/examples/configGeneration.md#L5)
+* [Facilitate ConfigMap rollouts - management - Issue #22368](https://github.com/kubernetes/kubernetes/issues/22368)
+* [stakater/Reloader: controller to watch changes in ConfigMap and Secrets and do rolling upgrades on Pods with their associated Deployment, StatefulSet, DaemonSet and DeploymentConfig](https://github.com/stakater/Reloader)
 
 ### Weaknesses
 
 * kubectl expose
 * k run httpd --image=httpd:alpine --port=80 --expose
+* manual schedulers
+* taints & node affinity
+  * affinity operators: In, Exists
 
 ### end
 
