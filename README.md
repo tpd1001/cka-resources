@@ -1,6 +1,8 @@
 # Certified Kubernetes Administrator Revision Notes
 
 These are my revision notes for my CKA exam. Hope someone finds them useful.
+https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/
+https://www.tripwire.com/state-of-security/security-data-protection/cloud/how-dockershim-forthcoming-deprecation-affects-your-kubernetes/
 
 ## setup
 
@@ -315,7 +317,7 @@ kubectl label nodes node1 size=Large
 ## node affinity
 
 ```yaml
-#spec:>nodeAffinity:
+#spec:>template:>spec:>affinity:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -347,6 +349,8 @@ kubectl label nodes node1 size=Large
 
 ## resources
 
+Create pod > yaml and edit/copy the resources lines
+
 ```bash
 kubectl describe po elephant | grep Reason
 kubectl describe po elephant | sed -n '/Last State/{;N;p}'
@@ -354,14 +358,17 @@ kubectl describe po elephant | sed -n '/Last State/{;N;p}'
 
 ## daemonsets
 
+Same creation process as for deployments only without the replicas
+
 ```bash
 kubectl get ds -A
 kubectl get ds -n kube-system kube-flannel-ds
 kubectl describe ds kube-flannel-ds|grep Image
 kubectl get ds kube-flannel-ds -o yaml
-kubectl create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d' > d.yaml
-kubectl create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' > ds.yaml
+kubectl create deployment -n kube-system elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 -o yaml --dry-run=client | \
+ sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' > ds.yaml
 kubectl create -f ds.yaml
+sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' deployment.yaml | kubectl apply -f -
 ```
 
 ## static pods
@@ -370,6 +377,10 @@ kubectl create -f ds.yaml
 * or as a --config switch to a file containing the staticPodPath opt
 
 ```bash
+# static pods will have the node name appended to the name
+kubectl get po -A -o wide
+
+# check the statis podpath in the kublet config
 sudo grep staticPodPath $(ps -wwwaux | \
  sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p' | \
  awk '/^\//{print $1}')
@@ -1518,6 +1529,7 @@ References:-
 
 * [usage](https://metallb.universe.tf/usage/)
 * [METALLB IN LAYER 2 MODE](https://metallb.universe.tf/concepts/layer2/)
+* [Using MetalLB to add the LoadBalancer Service to Kubernetes Environments](https://platform9.com/blog/using-metallb-to-add-the-loadbalancer-service-to-kubernetes-environments/) which supports multiple networks
 
 ## Design a Kubernetes Cluster
 
