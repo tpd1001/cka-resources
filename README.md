@@ -41,7 +41,7 @@ ansible
 2:main:SBGML06654:~/OD/____Future/Kubernetes/CKA/install_kubernetes_with_ansible$
 ```
 
-## Markdown and Mac stuff
+## YAML, Markdown and Mac stuff
 
 <!-- markdownlint-disable MD022 MD031 MD033 -->
 <details><summary>Expand...</summary>
@@ -51,6 +51,11 @@ iTerm2 on Mac stuff
 * [Captured Output](https://iterm2.com/documentation-captured-output.html)
 * [Triggers](https://iterm2.com/documentation-triggers.html)
 * [Shell Integration](https://iterm2.com/documentation-shell-integration.html)
+
+## YAML
+
+* [YAML cheat sheet](https://lzone.de/cheat-sheet/YAML)
+* [YAML Multiline Strings](https://yaml-multiline.info/)
 
 ## markdown
 
