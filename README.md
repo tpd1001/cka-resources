@@ -147,6 +147,8 @@ Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
 kubectl run nginx --image=nginx --dry-run=client -o yaml
 ```
 
+Get pods that are in a state of Running or not Running
+
 ```bash
 kubectl get po ${ns:+-n $ns} -l app=primary-01 -o name --field-selector=status.phase=Running
 kubectl get po ${ns:+-n $ns} -l app=primary-01 -o name --field-selector=status.phase!=Running
@@ -612,8 +614,26 @@ kubectl get cs
 
 ```bash
 kubectl drain node01 --ignore-daemonsets
+kubectl drain node01 --ignore-daemonsets --delete-emptydir-data
 kubectl cordon node01
 kubectl uncordon node01
+```
+
+### etcd
+
+```bash
+etcdctl member list                # list the members in the cluster
+etcdctl endpoint status            # list this server's status
+etcdctl endpoint status --cluster  # list all server status
+etcdctl endpoint health --cluster  # all endpoint health
+
+etcdsrv() { kubectl get -n kube-system pod $(kubectl get -n kube-system po|awk "/apiserver/{print \$1;exit}") -oyaml|sed -n '/etcd-servers/s/.*=//p'; }
+
+# my company only (probably)
+systemctl status etcd-member.service
+systemctl status etcd-backup.service
+journalctl -eu etcd-backup.service
+#NUKE#systemctl stop etcd-member.service && rm -rf /var/lib/etcd/*
 ```
 
 ### controlplane
