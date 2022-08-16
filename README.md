@@ -261,6 +261,9 @@ spec:
      name: nginx
 ```
 
+See also
+* [Advanced Scheduling in Kubernetes](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/)
+
 ## labels and selectors
 
 labels in spec>selector and spec>template must match
@@ -398,6 +401,13 @@ kubectl run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
  egrep -v 'creationTimestamp:|resources:|status:|Policy:' \
  >static-pod-nginx.yaml
 ```
+
+## statefulsets
+
+Similar to deployments.
+
+Probably not in the CKA exam but still of interest.
+* [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
 
 ## multiple schedulers
 
