@@ -1,8 +1,9 @@
 # Certified Kubernetes Administrator Revision Notes
 
 These are my revision notes for my CKA exam. Hope someone finds them useful.
-https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/
-https://www.tripwire.com/state-of-security/security-data-protection/cloud/how-dockershim-forthcoming-deprecation-affects-your-kubernetes/
+
+* [include-diagrams-markdown-files](https://github.blog/2022-02-14-include-diagrams-markdown-files-mermaid/)
+* [how-dockershim-forthcoming-deprecation-affects-your-kubernetes](https://www.tripwire.com/state-of-security/security-data-protection/cloud/how-dockershim-forthcoming-deprecation-affects-your-kubernetes/)
 
 ## setup
 
@@ -262,6 +263,7 @@ spec:
 ```
 
 See also
+
 * [Advanced Scheduling in Kubernetes](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/)
 
 ## labels and selectors
@@ -407,6 +409,7 @@ kubectl run static-pod-nginx --image=nginx --dry-run=client -o yaml | \
 Similar to deployments.
 
 Probably not in the CKA exam but still of interest.
+
 * [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
 
 ## multiple schedulers
