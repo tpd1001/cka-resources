@@ -1,5 +1,14 @@
 # Lightning Lab
 
+Setup
+
+```bash
+alias k=kubectl
+kubectl completion bash|grep '^ *complete' > K
+echo -e "set modeline\nset modelines=5" > $HOME/.vimrc
+v() { vim -c ":set ts=2 sw=2 sts=-1 et" $@; }
+```
+
 Q1
 
 ```bash
@@ -62,10 +71,6 @@ Q4
 kubectl config set-context --current --namespace default
 kubectl create deploy nginx-deploy --image=nginx:1.16
 kubectl get po -w &
-   14  kubectl set image deploy/nginx-deploy nginx=1.17  # wrong image version
-   15  k rollout undo --helo
-   16  k rollout undo --help
-   17  k rollout undo deployment/nginx-deploy
 kubectl set image deploy/nginx-deploy nginx=nginx:1.17
 ```
 
@@ -94,8 +99,11 @@ ETD
 export ETCDCTL_API=3
 cat /etc/kubernetes/manifests/etcd.yaml | \
  sed -n 's/trusted-ca/cacert/;/=\//s/-file//p'
-etcdctl snapshot save /opt/etcd-backup.db
-
+etcdctl \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot save /opt/etcd-backup.db
 ```
 
 Q7
@@ -103,6 +111,8 @@ Q7
 pods & secrets
 
 ```bash
+kubectl config set-context --current --namespace admin1401
+cat<<EOF >secret-1401.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -111,7 +121,7 @@ metadata:
   name: secret-1401
 spec:
   containers:
-  - image: nginx
+  - image: busybox
     name: secret-1401
     command:
     - "sleep"
@@ -128,4 +138,6 @@ spec:
 #x vim:set sw=2:ts=2:sts=-1:et
 #y vim set:ts=2:sw=2:sts:-1:et
 #z vim:set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
+EOF
+kubectl apply -f ecret-1401.yaml
 ```
