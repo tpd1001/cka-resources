@@ -3,7 +3,39 @@
 Q1
 
 ```bash
-tbc
+kubectl get no
+kubectl taint node controlplane node-role.kubernetes.io/master:NoSchedule-
+apt update
+apt-cache madison kubeadm
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
+kubectl get po -o wide
+kubectl cordon controlplane
+kubectl drain controlplane --ignore-daemonsets
+kubeadm upgrade plan v1.20.0
+kubeadm config images pull  # tbc
+kubeadm upgrade apply v1.20.0
+apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+systemctl daemon-reload
+systemctl restart kubelet
+kubectl get no
+kubectl uncordon controlplane
+kubectl cordon node01
+kubectl drain node01 --ignore-daemonsets
+ssh node02
+apt update
+apt-cache madison kubeadm
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubeadm=1.20.0-00
+kubeadm upgrade node
+exit  # back to controlplane
+ssh node02
+apt-get install -y --allow-change-held-packages kubelet=1.20.0-00 kubectl=1.20.0-00
+systemctl daemon-reload
+systemctl restart kubelet
+exit  # back to controlplane
+kubectl get no
+kubectl uncordon node01
 ```
 
 Q2
@@ -19,14 +51,18 @@ Q3
 export KUBECONFIG=/root/CKA/admin.kubeconfig 
 vim $KUBECONFIG  # correct port to 6443
 kubectl get no
+unset KUBECONFIG
+#OR#
+sed -i '/server:/s/:[0-9]*$/:6443/' /root/CKA/admin.kubeconfig
 ```
 
 Q4
 
 ```bash
+kubectl config set-context --current --namespace default
 kubectl create deploy nginx-deploy --image=nginx:1.16
 kubectl get po -w &
-   14  kubectl set image deploy/nginx-deploy nginx=1.17
+   14  kubectl set image deploy/nginx-deploy nginx=1.17  # wrong image version
    15  k rollout undo --helo
    16  k rollout undo --help
    17  k rollout undo deployment/nginx-deploy
@@ -36,71 +72,60 @@ kubectl set image deploy/nginx-deploy nginx=nginx:1.17
 Q5
 
 ```bash
-k get pv
-k get pvc
-k describe deploy ...
-k get pvc alpha-claim > pvc.orig
-k get pvc alpha-claim > pvc
+kubectl config set-context --current --namespace alpha
+kubectl get pv
+kubectl get pvc
+kubectl describe deploy alpha-mysql
+kubectl get pvc alpha-claim -o yaml > pvc.orig
+kubectl get pvc alpha-claim -o yaml > pvc
 vim pvc  # alpha-claim-pvc, ReadWriteOnce, 1 Gi, slow
-k delete pvc alpha-claim
-k apply -f pvc
-k get pvc  # should be Bound
-k get po   # should be Running
-
-
-root@controlplane:~#  k get pvc
-NAME          STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-alpha-claim   Bound    alpha-pv   1Gi        RWO            slow           11s
-
-   23  echo Q5
-   24  kubectl config set-context --current --namespace alpha-mysql
-   25  kubectl config set-context --current --namespace alpha
-   26  k get po
-   27  k get pvc
-   28  k get pvc alpha-claim -o yaml > pvc.orig
-   29  k get pvc alpha-claim -o yaml > pvc
-   30  vim pvc
-   31  k delete pvc alpha-claim
-   32  k apply -f pvc
-   33  k get po
-   34  k get deployments.apps alpha-mysql > dep.orig
-   35  k get deployments.apps alpha-mysql > dep
-   36  k edit deployments.apps alpha-mysql
-   37  vim pvc
-   38  k apply -f pvc
-   39  k get pvc
-   40  k delete pvc alpha-claim && vim pvc && k apply -f pvc
-   41  k apply -f pvc
-   42  k get pvc
-   43  k delete po alpha-mysql-6cc9f6bb7c-tvm7z
-   44  k get pvc
-   45  vi pvc
-   46  k apply -f pvc
-   47  k get pvc
-   48  k get storageclasses.storage.k8s.io -A
-   49  k get pvc
-   50  vim pvc && k apply -f pvc
-   51  k get pvc
-   52  alias k=kubectl
-   53  k get pvc
-   54  diff pvc.orig pvc
-   55  vim pvc && k apply -f pvc
-   56  k delete pvc mysql-alpha-pvc
-   57  vim pvc && k apply -f pvc
-   58  diff pvc.orig pvc
-   59  vim pvc && k apply -f pvc
-   60  k get pv
-   61  history
+kubectl delete pvc alpha-claim
+kubectl apply -f pvc
+kubectl get pvc  # should be Bound
+kubectl edit deploy alpha-mysql  # change pvc: mysql-alpha-pvc => alpha-claim
+kubectl get po   # should be Running
 ```
 
 Q6
 
+ETD
+
 ```bash
-tbc
+export ETCDCTL_API=3
+cat /etc/kubernetes/manifests/etcd.yaml | \
+ sed -n 's/trusted-ca/cacert/;/=\//s/-file//p'
+etcdctl snapshot save /opt/etcd-backup.db
+
 ```
 
 Q7
 
+pods & secrets
+
 ```bash
-tbc
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secret-1401
+  name: secret-1401
+spec:
+  containers:
+  - image: nginx
+    name: secret-1401
+    command:
+    - "sleep"
+    - "4800"
+    volumeMounts:
+    - mountPath: /etc/secret-volume
+      name: secret-volume
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: dotfile-secret
+# vim:sw=2:ts=2:sts=-1:et
+#x vim:set sw=2:ts=2:sts=-1:et
+#y vim set:ts=2:sw=2:sts:-1:et
+#z vim:set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 ```
