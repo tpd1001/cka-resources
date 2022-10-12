@@ -130,6 +130,14 @@ vim PODS.template && kubectl get po -o custom-columns-file=PODS.template
 watch -n1 kubectl get po -o custom-columns-file=${func_path?}/../CKA/PODS.template
 ```
 
+While you can specify a containerPort in the pod, it is purely informational as per [Should I configure the ports in the Kubernetes deployment?](https://faun.pub/should-i-configure-the-ports-in-kubernetes-deployment-c6b3817e495)
+
+```yaml
+ports:
+- name: mysql
+  containerPort: 3306  # purely informational
+```
+
 ### pods for speed, in the exam
 
 Reference (Bookmark this page for exam. It will be very handy):
@@ -277,6 +285,7 @@ kubectl get all --selector env=prod|egrep -vc '^$|NAME'
 kubectl get all --selector env=prod|grep -c ^[a-z]
 kubectl get all --selector env=prod --no-headers|wc -l
 kubectl get all --selector env=prod,bu=finance,tier=frontend --no-headers
+kubectl get all -l env=prod  # short switch
 ```
 
 ## taints and tolerations
@@ -298,6 +307,7 @@ use `kubectl describe node NODE` to list taints
 use a `-` suffix to the effect to remove it
 
 ```bash
+# remove taint on master to allow it to run pods
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
 # prevent master from running pods again (defaut)
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
@@ -392,7 +402,7 @@ sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' deployment.y
 # static pods will have the node name appended to the name
 kubectl get po -A -o wide
 
-# check the statis podpath in the kublet config
+# check the static pod path in the kublet config
 sudo grep staticPodPath $(ps -wwwaux | \
  sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p' | \
  awk '/^\//{print $1}')
@@ -411,6 +421,12 @@ Similar to deployments.
 Probably not in the CKA exam but still of interest.
 
 * [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+
+```bash
+kubectl create deployment ${name?} --image=nginx:1.23.1-alpine --replicas=2 --dry-run=client -o yaml | \
+ sed "s/Deployment$/StatefulSet/;s/strategy:.*/serviceName: $name/;/status:/d" | \
+kubectl apply -f -
+```
 
 ## multiple schedulers
 
@@ -647,6 +663,9 @@ systemctl status etcd-member.service
 systemctl status etcd-backup.service
 journalctl -eu etcd-backup.service
 #NUKE#systemctl stop etcd-member.service && rm -rf /var/lib/etcd/*
+
+export ETCDCTL=3
+etcdctl
 ```
 
 ### controlplane
@@ -842,7 +861,7 @@ curl -k https://controlplane:6443/ --key $PWD/dev-user.key --cert $PWD/dev-user.
 curl -k https://controlplane:6443/apis --key $PWD/dev-user.key --cert $PWD/dev-user.crt --cacert /etc/kubernetes/pki/ca.crt
 # =OR=
 kubectl proxy  # starts on localhost:8001 and proxy uses creds from kubeconfig file
-curl -k https://localhost:6443
+curl -k https://localhost:8001
 ```
 
 ## Authorisation
@@ -1523,6 +1542,21 @@ kubectl logs ${ns:+-n $ns} $(
   kubectl get po -A -l k8s-app=kube-dns -o name|head -1)
 ```
 
+```bash
+nslookup pod-i-p-addr.namespace.pod.cluster.local
+nslookup service-name.namespace.svc.cluster.local
+# e.g.
+nslookup 10-244-69-111.test.pod.cluster.local
+nslookup nginx-service.test.svc.cluster.local
+nslookup nginx-service.prod.svc.cluster.local
+# from prod
+nslookup nginx-service.test
+# from within the same test namespace
+nslookup nginx-service
+```
+
+See [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) for more details.
+
 ## Ingress (ing)
 
 * Ingress Controller
@@ -1762,7 +1796,7 @@ Further troubleshooting tips in kubernetes doc [Troubleshooting Clusters](https:
 
 ### Worker Node Failure
 
-Check syayus of nodes
+Check status of nodes
 
 ```bash
 kubectl get no  # look for NotReady
@@ -1863,6 +1897,9 @@ kubectl get no -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.capa
 kubectl get no -o custom-columns=NAME:{.metadata.name},CPU:.status.capacity.cpu
 # sorting
 kubectl get no --sort-by=.status.capacity.cpu
+
+# Mock Exam 3
+kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}'
 ```
 
 My Homegrown Examples (before I understood JSON PATH)
