@@ -110,9 +110,7 @@ Q7
 
 pods & secrets
 
-```bash
-kubectl config set-context --current --namespace admin1401
-cat<<EOF >secret-1401.yaml
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -134,10 +132,62 @@ spec:
   - name: secret-volume
     secret:
       secretName: dotfile-secret
+```
+
+```bash
+kubectl config set-context --current --namespace admin1401
+cat<<EOF >secret-1401.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secret-1401
+  name: secret-1401
+spec:
+  volumes:
+  - name: secret-volume
+    # secret volume
+    secret:
+      secretName: dotfile-secret
+  containers:
+  - image: busybox
+    name: secret-admin
+    command:
+    - "sleep"
+    - "4800"
+    volumeMounts:
+    - mountPath: /etc/secret-volume
+      readOnly: true
+      name: secret-volume
 # vim:sw=2:ts=2:sts=-1:et
 #x vim:set sw=2:ts=2:sts=-1:et
 #y vim set:ts=2:sw=2:sts:-1:et
 #z vim:set shiftwidth=2 tabstop=2 softtabstop=-1 expandtab
 EOF
-kubectl apply -f ecret-1401.yaml
+kubectl -n admin1401 apply -f secret-1401.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: secret-1401
+  name: secret-1401
+spec:
+  containers:
+  - image: busybox
+    name: secret-admin
+    command:
+    - sleep
+#    args:
+    - "4800"
+    volumeMounts:
+    - mountPath: /etc/secret-volume
+      name: secret-volume
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: dotfile-secret
 ```
