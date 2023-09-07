@@ -1925,6 +1925,10 @@ Not part of CKA but interesting.
 
 ## Other Resources
 
+Other exam resources that may be of use
+
+* [CKAD-Bookmarks](https://github.com/reetasingh/CKAD-Bookmarks)
+
 Also not part of CKA but these are interesting articles I found on t'Internet:
 
 * [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way)

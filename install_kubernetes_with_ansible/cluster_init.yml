@@ -39,6 +39,8 @@
 
   tasks:
 
+  - pause: seconds=5
+
 #  - name: Resetting kubeadm
 #    shell: kubeadm reset -f
 #    register: output
@@ -83,6 +85,17 @@
       owner: "{{ ansible_user }}"
       group: "{{ ansible_user }}"
       mode: '0644'
+
+  - name: Get kubeconfig file
+    shell: cat /etc/kubernetes/admin.conf
+    register: kubeconfig_file
+
+  - name: Copy kubeconfig command to local file.
+    # fixed by disabling ansible_become: in inventory and setting become: no in the task
+    # also needs "localhost ansible_connection=local" in the inventory
+    become: no
+    #local_action: copy content="{{ kubeconfig_file.stdout }}" dest="kubeconfigz" mode=0600
+    local_action: copy content="{{ kubeconfig_file.stdout }}" dest="/tmp/kubeconfig" mode=0600
 
   - pause: seconds=10
 
