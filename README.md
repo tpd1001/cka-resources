@@ -309,8 +309,10 @@ use a `-` suffix to the effect to remove it
 ```bash
 # remove taint on master to allow it to run pods
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-
 # prevent master from running pods again (defaut)
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
+kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule
 ```
 
 ### other taints
@@ -467,6 +469,8 @@ kubectl top pod
 kubectl set image deployment/myapp nginx=nginx:1.9.1
 #                            ^^^^^-The name of the container inside the pod
 kubectl edit deployment/myapp
+#OR#
+kubectl rollout restart deployment/myapp
 kubectl annotate deployment/myapp kubernetes.io/change-cause="foo"  # replace deprecated --record
 kubectl rollout status deployment/myapp
 kubectl rollout history deployment/myapp
