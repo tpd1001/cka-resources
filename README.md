@@ -362,6 +362,7 @@ kubectl label nodes node1 size=Large
                 values:
                 - blue
 
+      # this should let the pod run on a controlplane node
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -369,6 +370,19 @@ kubectl label nodes node1 size=Large
             - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - tomd-nginx
+              # will get stuck on deployment restart if: num pods = num nodes
+              # though individual pod restarts seem ok
+              topologyKey: "kubernetes.io/hostname"
 ```
 
 ## resources

@@ -17,6 +17,7 @@ logs
 backup
 .DS_Store
 *.log
+*.gz
 # PDFs
 # (listed individually so I can see if I've missed downloading any)
 Kubernetes+-CKA-+0100+-+Core+Concepts.pdf
