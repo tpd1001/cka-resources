@@ -102,7 +102,7 @@ Kubernetes is built on Go.
 
 <details><summary>Some interesting background reading...</summary>
 
-* [How To Call Kubernetes API using Go - Types and Common Machinery](https://iximiuz.com/en/posts/kubernetes-api-go-types-and-common-machinery/) - annoyingly, this domain has gone away but I snaffled the HTML from Google's cache.
+* [How To Call Kubernetes API using Go - Types and Common Machinery](https://iximiuz.com/en/posts/kubernetes-api-go-types-and-common-machinery/) - annoyingly, this domain has gone away but I grabbed the HTML from Google's cache.
 * more to come perhaps...
 
 </details>
@@ -231,7 +231,7 @@ kubectl create ns dev-ns
 kubectl create deployment redis-deploy -n dev-ns --image=redis --replicas=2
 ```
 
-## common verbs/ations
+## common verbs/actions
 
 ### describe
 ```bash
@@ -310,7 +310,7 @@ use a `-` suffix to the effect to remove it
 # remove taint on master to allow it to run pods
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule-
 kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-
-# prevent master from running pods again (defaut)
+# prevent master from running pods again (default)
 kubectl taint nodes controlplane node-role.kubernetes.io/master:NoSchedule
 kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule
 ```
@@ -418,7 +418,7 @@ sed 's/Deployment$/DaemonSet/;/replicas:/d;/strategy:/d;/status:/d' deployment.y
 # static pods will have the node name appended to the name
 kubectl get po -A -o wide
 
-# check the static pod path in the kublet config
+# check the static pod path in the kubelet config
 sudo grep staticPodPath $(ps -wwwaux | \
  sed -n '/kubelet /s/.*--config=\(.*\) --.*/\1/p' | \
  awk '/^\//{print $1}')
@@ -440,7 +440,7 @@ Probably not in the CKA exam but still of interest.
 
 ```bash
 kubectl create deployment ${name?} --image=nginx:1.23.1-alpine --replicas=2 --dry-run=client -o yaml | \
- sed "s/Deployment$/StatefulSet/;s/strategy:.*/serviceName: $name/;/status:/d" | \
+ sed "s/Deployment$/StatefulSet/;s/strategy:.*/service Name: $name/;/status:/d" | \
 kubectl apply -f -
 ```
 
@@ -478,6 +478,13 @@ kubectl top pod
 
 * RollingUpdate - a few pods at a time
 * Recreate      - all destroyed in one go and then all recreated
+  * you might need this for pods attaching to a PVC in ReadWriteOnce mode
+
+```yaml
+spec:
+  strategy:
+    type: Recreate
+```
 
 ```bash
 kubectl set image deployment/myapp nginx=nginx:1.9.1
@@ -499,8 +506,8 @@ kubectl get po -o=custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[].im
 * with CMD        command line params get replaced entirely
 * with ENTRYPOINT command line params get appended
 * ENTRYPOINT => command that runs on startup
-* CMD        => default params to command at sartup
-* always specity in json format
+* CMD        => default params to command at startup
+* always specify in json format
 
 ```text
 ENTRYPOINT ["sleep"]
@@ -704,7 +711,7 @@ sudo systemctl daemon-reload && sudo systemctl restart kubelet
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
 kubectl uncordon controlplane
-# oneliners (for unjoined node)
+# one-liners (for unjoined node)
 sudo yum makecache -y fast && yum list --showduplicates kubeadm --disableexcludes=kubernetes
 ver=1.21.2
 sudo yum install -y kubeadm-${ver?}-0 --disableexcludes=kubernetes
@@ -900,7 +907,7 @@ Authorisation Mechanisms
   * e.g. Open Policy Agent
 * AlwaysAllow
   * kube-apiserver switch `--authorization-mode=AlwaysAllow` by default
-  * comma separatyed list
+  * comma separated list
 * AlwaysDeny
 
 ### Roles and Role Bindings
@@ -1067,7 +1074,7 @@ the default sa in each ns is automatically created as a volume mount in all crea
 mounted at `/var/run/secrets/kubernetes.io/serviceaccount` so you can access it
 
 ```yaml
-# inside template>pod spec, NOT dep spec!
+# inside template>pod spec, NOT deployment spec!
 spec:
   serviceAccountName: dashboard-sa
   # must delete & recreate pod (deployment handles this)
@@ -1151,8 +1158,8 @@ docker pull kodekloud/webapp-conntest
 * the response is not in scope
 
 in the from: or to: sections,
- each hyphen prefix is a rule and they are all OR'd together. ie. only need to match one rule
- without a hyphen prefix it is a criteria for a rule and they are all AND'd together. ie. must match ALL criteria
+ each hyphen prefix is a rule and they are all OR'd together. i.e. only need to match one rule
+ without a hyphen prefix it is a criteria for a rule and they are all AND'd together. i.e. must match ALL criteria
 
 ## Storage
 
@@ -1216,7 +1223,7 @@ spec:
       mountPath: "/var/www/html"
 ```
 
-### Storge Classes (sc)
+### Storage Classes (sc)
 `kubectl get sc`
 #### provisioner
 ```bash
@@ -1342,7 +1349,7 @@ iptables -t nat -A PREROUTING \
 
 ##### FAQ
 
-While testing the Network Namespaces, if you come across issues where you can't ping one namespace from the other, make sure you set the NETMASK while setting IP Address. ie: 192.168.1.10/24
+While testing the Network Namespaces, if you come across issues where you can't ping one namespace from the other, make sure you set the NETMASK while setting IP Address. i.e: 192.168.1.10/24
 
 ```bash
 ip -n red addr add 192.168.1.10/24 dev veth-red
@@ -1379,7 +1386,7 @@ Other CNI plugin examples:
 
 * bridge, vlan, ipvlan, macvlan, windows
 * dhcp, host-local
-* weave, flannel, cilium, vmwrensx, calico, infoblox
+* weave, flannel, cilium, vmwarensx, calico, infoblox
 
 Docker does NOT implement CNI but rather CNM (container network model) so you can't run `docker run --network=cni-bridge nginx` but you could use:
 
@@ -1461,13 +1468,13 @@ cat /etc/cni/net.d/10-*|jq '.'
 
 ### CNI weave (WeaveWorks)
 
-an agent/service on each node which communidate with each other
+an agent/service on each node which communicate with each other
 each agent stores topo
 creates bridge called "weave" (separate to bridge created by docker etc.)
 pod can be attached to multiple bridge networks
 weave ensures pod has route to agent
 agent then takes care of other pods
-peforms encapsulation
+performs encapsulation
 
 can be deployed ad daemons on node os
 or as daemonset (ideally)
@@ -1518,7 +1525,7 @@ kube-api-server --service-cluster-ip-range CIDR
 
 ```bash
 kubectl get svc  # list ClusterIP
-kubectl get svc db-dervice
+kubectl get svc db-service
 iptables -L -t nat | grep db-service
 sudo grep 'new service' /var/log/kube-proxy.log  # location varies
 sudo grep 'new service' /var/log/pods/kube-system_kube-proxy-*/kube-proxy/*.log
@@ -1532,7 +1539,7 @@ Services
 
 * when service created, kube dns record is created, can use service name, within same namespace e.g. web-service
 * when in a different namespace, append the namespace as a domain e.g. web-service.apps
-* all recoreds of a type e.g. services are grouped together in a subdomain, svc e.g. web-service.apps.svc
+* all records of a type e.g. services are grouped together in a subdomain, svc e.g. web-service.apps.svc
 * all services & pods are in a root domain, cluster.local by default e.g. web-service.apps.svc.cluster.local
 
 Pods
@@ -1578,7 +1585,7 @@ See [DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-net
 ## Ingress (ing)
 
 * Ingress Controller
-  * nginix
+  * nginx
   * GCE
   * Contour
   * haproxy
@@ -1646,7 +1653,7 @@ Maximums
     * harder
   * api sever has a list of etcd servers
   * since etcd is distributed, can read/write to any instance
-  * distribued consensus with RAFT protocol
+  * distributed consensus with RAFT protocol
   * write complete if can be confirmed on majority of cluster nodes (quorum)
   * quorum = N/2+1 (should be an odd number of nodes)
 
@@ -1854,7 +1861,7 @@ To limit the output, use a criteria
 ```json
 ?()     # denotes the check if inside the list
 @       # represents each item in the list
-@ > 40  # items greter than 40
+@ > 40  # items greater than 40
 @ == 40
 @ != 40
 @ in [40,41,42]
@@ -1893,7 +1900,7 @@ $[-3:0]   # last three elements
 
 </details>
 
-[JSON PATH](https://githib.com/json-path/JsonPath) Documentation
+[JSON PATH](https://github.com/json-path/JsonPath) Documentation
 
 JSON PATH in kubectl
 
@@ -2027,7 +2034,7 @@ ot2md() {
 * [Dirty Kubeconfig? Clean it up!](https://medium.com/@ashleyschuett/dirty-kubeconfig-clean-it-up-65cc56c372a6)
 * [kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)
 * [kube-dns ContainerCreating /run/flannel/subnet.env no such file - Issue #36575](https://github.com/kubernetes/kubernetes/issues/36575)
-* [pod cidr not assgned - Issue #728](https://github.com/flannel-io/flannel/issues/728)
+* [pod cidr not assigned - Issue #728](https://github.com/flannel-io/flannel/issues/728)
 * [Kube-Flannel cant get CIDR although PodCIDR available on node](https://stackoverflow.com/questions/50833616/kube-flannel-cant-get-cidr-although-podcidr-available-on-node)
 * [How do I access a private Docker registry with a self signed certificate using Kubernetes?](https://stackoverflow.com/questions/53545732/howIdoaiaaccess-a-private-docker-registry-with-a-self-signed-certificate-using-k)
 * [Test your Kubernetes experiments with an open source web interface](https://opensource.com/article/21/6/chaos-mesh-kubernetes)
@@ -2035,7 +2042,7 @@ ot2md() {
 And more OneTab exports
 
 * [Implementing Chaos Engineering in K8s: Chaos Mesh Principle Analysis and Control Plane Development](https://en.pingcap.com/blog/implementing-chaos-engineering-in-k8s-chaos-mesh-principle-analysis-and-control-plane-development/)
-* [Siloscape: The Dark Side of Kubernetes - Container Journal](https://containerjournal-com.cdn.ampproject.org/v/s/containerjournal.com/features/siloscape-the-dark-side-of-kubernetes/amp/?amp_gsa=1&amp_js_v=a6&usqp=mq331AQIKAGwASCAAgM%3D#amp_tf=From+%251%24s&aoh=16341240802898&csi=0&ampshare=https%3A%2F%2Fcontainerjournal.com%2Feditorial-calendar%2Fbest-of-2021%2Fsiloscape-the-dark-side-of-kubernetes%2F)
+* [Siloscape: The Dark Side of Kubernetes - Container Journal](https://cloudnativenow.com/editorial-calendar/best-of-2021/siloscape-the-dark-side-of-kubernetes/)
 * [Single Sign-On SSH With Zero Key Management](https://smallstep.com/sso-ssh/)
 * [Easy Monitoring of Container Status - Log](https://boatswain.io/)
 * [Kubernetes at home - Bringing the pilot to dinner](https://darienmt.com/kubernetes/2019/03/31/kubernetes-at-home.html)
