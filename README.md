@@ -2026,7 +2026,7 @@ ot2md() {
 * [Metallb LoadBalancer is stuck on pending](https://stackoverflow.com/questions/66124430/metallb-loadbalancer-is-stuck-on-pending)
 * [external-ip status is pending - Issue #673 - metallb/metallb](https://github.com/metallb/metallb/issues/673)
 * [kubectl Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
-* ["pkg/mod/k8s.io/client-go@v0.18.5/tools/cache/reflector.go:125: Failed to list *v1.Service: Unauthorized"](https://stackoverflow.com/questions/66329284/pkg-mod-k8s-io-client-gov0-18-5-tools-cache-reflector-go125-failed-to-list)
+* [pkg/mod/k8s.io/client-go@v0.18.5/tools/cache/reflector.go:125: Failed to list v1.Service: Unauthorized](https://stackoverflow.com/questions/66329284/pkg-mod-k8s-io-client-gov0-18-5-tools-cache-reflector-go125-failed-to-list)
 * [Troubleshooting - NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/troubleshooting/)
 * [The worst so-called "best practice" for Docker](https://pythonspeed.com/articles/security-updates-in-docker/)
 * [Working with kubernetes configmaps, part 2: Watchers](https://itnext.io/working-with-kubernetes-configmaps-part-2-watchers-b6dd0e583d71)
@@ -2051,6 +2051,9 @@ And more OneTab exports
 * [matchbox/deployment.md at master - poseidon/matchbox](https://github.com/poseidon/matchbox/blob/master/docs/deployment.md)
 * [Kubernetes Proceeding with Deprecation of Dockershim in Upcoming 1.24 Release](https://www.infoq.com/news/2022/01/kubernetes-dockershim-removal/)
 * [Kubernetes Nodes - The Complete Guide](https://komodor.com/learn/kubernetes-nodes-complete-guide/)
+
+Yet more OneTab exports
+
 * [Kubernetes ConfigMap Configuration and Reload Strategy](https://medium.com/swlh/kubernetes-configmap-confuguration-and-reload-strategy-9f8a286f3a44)
 * [Restart pods when configmap updates in Kubernetes?](https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes)
 * [Chart Development Tips and Tricks](https://helm.sh/docs/howto/charts_tips_and_tricks/#automatically-roll-deployments)
